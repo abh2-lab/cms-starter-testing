@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import {
   getTemplatesByRole,
   partRegistry,
@@ -29,6 +29,11 @@ export function parseVueRegistryKeys(): string[] {
 }
 
 function parseOneRegistry(file: string): string[] {
+  // A theme layer need not have its own registry: themes/basic only re-skins
+  // core's blocks, and the active theme may be core itself. Missing is normal,
+  // not an error — treating it as one failed the web image build for every
+  // publisher, because the starter export excludes custom themes.
+  if (!existsSync(file)) return [];
   const content = readFileSync(file, 'utf8');
   const start = content.indexOf('export const BLOCK_REGISTRY');
   if (start === -1) {

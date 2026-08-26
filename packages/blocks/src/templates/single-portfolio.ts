@@ -42,7 +42,9 @@ export const singlePortfolio: TemplateMeta = {
       block_key: 'sidebar-contact-card',
       default_fields: {},
       default_options: {
-        content_type_slug: 'portfolio-inquiry',
+        // content_type_slug deliberately unset — see the block's meta. A core
+        // template cannot name a content type that only one publisher's
+        // fixtures define; the editor binds it after applying the template.
         region: 'aside',
       },
     },

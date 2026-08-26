@@ -52,7 +52,12 @@ export const sidebarContactCard: Block<
         key: 'content_type_slug',
         label: 'Submission content type',
         type: 'content_type_slug',
-        default: 'portfolio-inquiry',
+        // No default ON PURPOSE. This is a core block, and every publisher's
+        // submission type is their own — it used to default to
+        // 'portfolio-inquiry', a type that exists only in PING's fixtures,
+        // which are excluded from the starter export. A fresh install
+        // therefore shipped a block pointing at a content type it did not
+        // have. The admin picks from the live content-type list instead.
         helpText:
           'Messages are saved as entries of this type (it must allow public submissions).',
       },

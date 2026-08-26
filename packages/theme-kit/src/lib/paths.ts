@@ -1,5 +1,5 @@
 import { dirname, join, relative, resolve } from 'node:path';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 // Resolve the monorepo root by walking up from this module until we find the
@@ -24,13 +24,57 @@ export const REPO_ROOT = findRepoRoot();
 // thread an active-theme arg through here.
 // The THEME layer gen writes into, and the CORE layer it sits on top of.
 //
-// themes/default is now the generic core layer: the 39 core renderers, the
-// pages, and the data layer that ship to every publisher. themes/ping holds
-// PING's own renderers and is the layer that leaves for its own repo in
-// v1.5.0. gen:block writes a new block's Vue half into the THEME layer, and
-// verification has to consider BOTH, because a block's renderer may live in
-// either. See docs/phase-3-versioning-and-updates-plan.md.
-export const THEME_DIR = resolve(REPO_ROOT, 'apps/web/themes/ping');
+// themes/default is the generic core layer: the 39 core renderers, the pages,
+// and the data layer that ship to every publisher. The THEME layer is whichever
+// theme this install runs — ACTIVE_THEME — and it is NOT fixed: a publisher's
+// custom theme is excluded from the starter export, so hardcoding one name
+// made `verify:theme:structure` look for a file the export does not contain and
+// failed the web image build for every publisher.
+//
+// Falls back to 'basic', the theme the blank starter ships with, and then to
+// 'default' if even that is absent. gen:block writes a block's Vue half into
+// this layer; verification considers BOTH, since a renderer may live in either.
+// See docs/phase-3-versioning-and-updates-plan.md.
+const WEB_THEMES_DIR = resolve(REPO_ROOT, 'apps/web/themes');
+
+/**
+ * ACTIVE_THEME from the monorepo root .env, when it is not already in the
+ * environment.
+ *
+ * The kit runs as a plain CLI under pnpm, which does not load that file — api
+ * and worker pass `--env-file=../../.env` explicitly and nuxt.config reads it
+ * by hand. Without this, ACTIVE_THEME never arrives and every verification run
+ * resolves to the fallback theme, reporting every custom block as unrendered.
+ */
+function activeThemeFromRootEnv(): string {
+  const fromProcess = (process.env['ACTIVE_THEME'] ?? '').trim();
+  if (fromProcess) return fromProcess;
+  const envFile = join(REPO_ROOT, '.env');
+  if (!existsSync(envFile)) return '';
+  for (const rawLine of readFileSync(envFile, 'utf8').split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const eq = line.indexOf('=');
+    if (eq === -1) continue;
+    if (line.slice(0, eq).trim() !== 'ACTIVE_THEME') continue;
+    return line
+      .slice(eq + 1)
+      .trim()
+      .replace(/^['"]|['"]$/g, '');
+  }
+  return '';
+}
+
+function resolveActiveTheme(): string {
+  const requested = activeThemeFromRootEnv();
+  for (const name of [requested, 'basic', 'default']) {
+    if (name && existsSync(join(WEB_THEMES_DIR, name))) return name;
+  }
+  return 'default';
+}
+
+export const ACTIVE_THEME_NAME = resolveActiveTheme();
+export const THEME_DIR = resolve(WEB_THEMES_DIR, ACTIVE_THEME_NAME);
 export const CORE_THEME_DIR = resolve(REPO_ROOT, 'apps/web/themes/default');
 
 // @cms/blocks — the server half.
@@ -42,7 +86,12 @@ export const CORE_THEME_DIR = resolve(REPO_ROOT, 'apps/web/themes/default');
 // is the whole point of the split, and check-theme-scope.mjs enforces it.
 // See docs/phase-3-versioning-and-updates-plan.md.
 export const BLOCKS_SRC = resolve(REPO_ROOT, 'packages/blocks/src');
-export const THEME_SERVER_DIR = resolve(BLOCKS_SRC, 'themes/ping');
+// The active theme's server blocks. May legitimately not exist — themes/basic
+// has no server-side blocks of its own, it only re-skins core's.
+export const THEME_SERVER_DIR = resolve(
+  BLOCKS_SRC,
+  `themes/${ACTIVE_THEME_NAME}`,
+);
 export const BLOCKS_DIR = resolve(THEME_SERVER_DIR, 'blocks');
 export const TEMPLATES_DIR = resolve(THEME_SERVER_DIR, 'templates');
 export const PARTS_DIR = resolve(THEME_SERVER_DIR, 'parts');
