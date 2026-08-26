@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { DEV_VERSION, detectRepoVersion } from './version.js';
 
 const EnvSchema = z
   .object({
@@ -230,22 +229,6 @@ const EnvSchema = z
     // ─── Version & update checks ───────────────────────────────────────────
     // See docs/phase-3-versioning-and-updates-plan.md.
     //
-    // The version THIS build is. Set explicitly by the release workflow
-    // (`--build-arg CMS_VERSION=<tag>`), which is authoritative once images
-    // are published. When unset it falls back to the monorepo root
-    // package.json, so a build-from-source deploy still reports its real
-    // version instead of a permanent false "update available". Only if BOTH
-    // are unavailable does it read '0.0.0' = an unversioned build, which the
-    // update check treats as always-behind.
-    // preprocess, not just .default(): Zod's default only fires on `undefined`,
-    // but the value arrives EMPTY rather than absent in two real cases — an
-    // empty `ARG CMS_VERSION=` in the Dockerfile, and a blank field in
-    // Coolify's env UI. Without this, an empty string would fail .min(1) and
-    // crash the container at boot instead of falling back.
-    CMS_VERSION: z.preprocess(
-      (v) => (typeof v === 'string' && v.trim().length > 0 ? v.trim() : undefined),
-      z.string().min(1).default(detectRepoVersion() ?? DEV_VERSION),
-    ),
     // Where the release manifest lives. Must be reachable WITHOUT credentials:
     // the core repo is private, so the manifest gets its own small public repo
     // (it carries version numbers and notes only — nothing sensitive). Kept as

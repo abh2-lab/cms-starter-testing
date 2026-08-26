@@ -65,17 +65,6 @@ WORKDIR /repo
 
 ENV NODE_ENV=production
 
-# The version this image IS. The release workflow passes
-# --build-arg CMS_VERSION=<tag>, which is authoritative. Left unset, @cms/config
-# falls back to the monorepo root package.json (copied into this image just
-# below), so a build-from-source deploy still reports its real version instead
-# of a permanent false "update available" banner.
-# Empty here on purpose: an empty ARG leaves CMS_VERSION unset in the
-# container, which is what triggers that fallback. Do NOT default it to 0.0.0 —
-# that would pin every unattended build to a bogus version.
-# See docs/phase-3-versioning-and-updates-plan.md.
-ARG CMS_VERSION=
-ENV CMS_VERSION=${CMS_VERSION}
 
 # Preserve the workspace layout from the builder so pnpm's symlinks under
 # node_modules resolve at runtime. Frontend apps are excluded.

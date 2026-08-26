@@ -1,5 +1,5 @@
 import { db, schema } from '@cms/db';
-import { compareVersions, env, parseVersion } from '@cms/config';
+import { CMS_VERSION, compareVersions, env, parseVersion } from '@cms/config';
 
 import type { Logger } from '../logger.js';
 
@@ -152,7 +152,7 @@ async function writeStatus(
 }
 
 export async function runUpdateCheck(log: Logger): Promise<UpdateCheckResult> {
-  const currentVersion = env.CMS_VERSION;
+  const currentVersion = CMS_VERSION;
 
   // Two independent off switches: the env var (a deploy can enforce it) and
   // the DB flag (an operator can set it from the admin). Either disables.

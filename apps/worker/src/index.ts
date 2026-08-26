@@ -1,5 +1,5 @@
 import type { Worker } from 'bullmq';
-import { env } from '@cms/config';
+import { CMS_VERSION, env } from '@cms/config';
 import {
   createProducers,
   createQueueRedis,
@@ -108,6 +108,17 @@ async function main(): Promise<void> {
         repeat: { pattern: '20 4 * * *', tz: 'UTC' },
         jobId: 'repeat-update-check',
       },
+    );
+    // One check at boot, on top of the daily schedule. Without it a freshly
+    // deployed install knows nothing about its own currency until the next
+    // 04:20 UTC sweep — up to a day of showing no banner while an update is
+    // already out. It also gives an operator a way to force a check: redeploy.
+    // Cheap (one outbound GET) and idempotent; the job records its result on
+    // the singleton row either way.
+    await maintenanceQueue.add(
+      JOB_NAMES.maintenance.updateCheck,
+      {},
+      { jobId: `boot-update-check-${CMS_VERSION}` },
     );
   }
 

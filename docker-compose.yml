@@ -297,10 +297,6 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-      args:
-        # Version baked into the image. The release workflow sets CMS_VERSION
-        # from the git tag; locally it stays 0.0.0 = an unversioned dev build.
-        CMS_VERSION: ${CMS_VERSION:-0.0.0}
     environment:
       NODE_ENV: production
       LOG_LEVEL: info
@@ -373,8 +369,6 @@ services:
     build:
       context: .
       dockerfile: apps/worker/Dockerfile
-      args:
-        CMS_VERSION: ${CMS_VERSION:-0.0.0}
     # Internal background processor — never publicly routed. The labels tell
     # Coolify to skip the proxy/domain UI (no pointless public worker domain).
     labels:

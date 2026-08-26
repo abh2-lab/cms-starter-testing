@@ -51,7 +51,7 @@ export function compareVersions(a: string, b: string): number {
   return 0;
 }
 
-/** Last-resort CMS_VERSION when the real one cannot be determined at all. */
+/** Last-resort version when package.json cannot be read at all. */
 export const DEV_VERSION = '0.0.0';
 
 /** True when this build carries no real version (local dev, or a bad build). */
@@ -92,3 +92,21 @@ export function detectRepoVersion(): string | null {
     return null;
   }
 }
+
+/**
+ * The version this install IS — read from the monorepo root package.json, and
+ * from nowhere else.
+ *
+ * There is deliberately NO environment override. There used to be a
+ * CMS_VERSION env var, set through a compose build arg, and it was a pure
+ * liability: compose substituted a literal '0.0.0' when the variable was
+ * unset, which is a perfectly valid non-empty string, so it won every time and
+ * the package.json fallback never ran. A test install reported itself as
+ * version 0.0.0 and believed every release was newer than itself.
+ *
+ * The version and the code are the same artifact — they ship in the same image
+ * — so anything that can disagree with package.json can only ever be wrong.
+ * CI already fails a release whose tag does not match package.json, which
+ * makes package.json authoritative for published images too.
+ */
+export const CMS_VERSION: string = detectRepoVersion() ?? DEV_VERSION;

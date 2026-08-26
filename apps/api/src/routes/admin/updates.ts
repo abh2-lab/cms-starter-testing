@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db, schema } from '@cms/db';
-import { compareVersions, env, isDevVersion } from '@cms/config';
+import { CMS_VERSION, compareVersions, env, isDevVersion } from '@cms/config';
 import { JOB_NAMES, QUEUE_NAMES } from '@cms/queue';
 
 import { producers } from '../../lib/queue.js';
@@ -35,7 +35,7 @@ export const adminUpdatesRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/', async () => {
     const [row] = await db.select().from(schema.updateStatus).limit(1);
-    const currentVersion = env.CMS_VERSION;
+    const currentVersion = CMS_VERSION;
 
     // Re-compare rather than trusting that latestVersion is non-null. The
     // worker clears it when up to date, but between an operator upgrading and
