@@ -1,0 +1,32 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Paths excluded from `git archive` (and therefore from the starter/clone zip
+# produced by `pnpm export:starter` / `pnpm export:clone`). Dev-only, not part
+# of the runnable application a fresh-install user needs. NOTE: docs/ is
+# intentionally NOT excluded — the operational runbooks ship with the bundle.
+apps/e2e/         export-ignore
+loadtest/         export-ignore
+.claude/          export-ignore
+.github/          export-ignore
+.vscode/          export-ignore
+CLAUDE.md         export-ignore
+*.test.ts         export-ignore
+
+# Decode's real publisher content (posts / pages / media) — kept in the repo
+# for `export:clone` and dev seeding, but stripped from the BLANK
+# `export:starter` so a fresh publisher gets a clean CMS with no Decode data.
+# `export:clone` restores the live DB dump (not these fixtures), so it is
+# unaffected. NOTE: this only strips the DATA; the CMS theme CODE
+# (apps/web/themes/{default,basic}) ships on purpose — both are part of the CMS
+# and receive updates. Only a publisher's CUSTOM theme is excluded, below.
+
+# PING's CUSTOM theme — the publisher's own hand-built work, not part of the
+# CMS. `pnpm export:starter` ships only the two CMS themes (default + basic);
+# a custom theme belongs to the install that made it and is never distributed,
+# never updated by the CMS, and would otherwise hand a new publisher another
+# publisher's design, brand marks and content.
+# See docs/phase-3-versioning-and-updates-plan.md.
+apps/web/themes/ping/            export-ignore
+packages/blocks/src/themes/ping/ export-ignore
+apps/api/fixtures/ping/          export-ignore

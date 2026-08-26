@@ -1,0 +1,63 @@
+[
+  {
+    "content_type_slug": "article",
+    "slug": "example-fixture-welcome",
+    "title": "Welcome — this post was seeded from a fixture",
+    "status": "published",
+    "featured": true,
+    "custom_fields": {
+      "subtitle": "Proof that the loader works end to end",
+      "summary": "This post lives in apps/api/fixtures/example/posts.json. Editing the JSON and re-running seed:fixtures does NOT overwrite the row — content is editor-owned.",
+      "section": "news",
+      "is_featured": true,
+      "body": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "If you can read this in the public site, the fixture loader successfully wired a content type, a post, taxonomy, and SEO from JSON files."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "taxonomy_terms": [
+      { "taxonomy_slug": "categories", "term_slug": "local" },
+      { "taxonomy_slug": "tags", "term_slug": "breaking" }
+    ],
+    "seo": {
+      "meta_title": "Welcome — fixture-loader demo",
+      "meta_description": "Demonstrates a post seeded by the fixture loader.",
+      "og_title": "Welcome — fixture-loader demo",
+      "schema_type": "Article"
+    }
+  },
+  {
+    "content_type_slug": "article",
+    "slug": "second-fixture-post",
+    "title": "A second post, for the latest-news block",
+    "status": "published",
+    "custom_fields": {
+      "subtitle": "Needed so the latest-news grid has more than one row",
+      "summary": "Short second post, demonstrates multi-post seeding.",
+      "section": "opinion",
+      "body": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [{ "type": "text", "text": "Filler body content." }]
+          }
+        ]
+      }
+    },
+    "taxonomy_terms": [
+      { "taxonomy_slug": "categories", "term_slug": "business" },
+      { "taxonomy_slug": "tags", "term_slug": "analysis" }
+    ]
+  }
+]

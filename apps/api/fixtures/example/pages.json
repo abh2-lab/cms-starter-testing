@@ -1,0 +1,54 @@
+[
+  {
+    "slug": "home",
+    "title": "Home",
+    "type": "dynamic",
+    "status": "published",
+    "template_key": "home-default",
+    "system_managed": true,
+    "blocks": [
+      {
+        "block_key": "hero",
+        "fields": { "badge": "Featured" },
+        "options": { "content_type": "article", "slug": "example-fixture-welcome" }
+      },
+      {
+        "block_key": "latest-news",
+        "fields": { "eyebrow": "Latest", "title": "Latest articles" },
+        "options": { "content_type": "article", "count": 6 }
+      },
+      {
+        "block_key": "impact-stats",
+        "fields": {
+          "eyebrow": "By the numbers",
+          "title": "A quick snapshot",
+          "stats": [
+            { "label": "Published articles", "value": "2" },
+            { "label": "Categories", "value": "3" },
+            { "label": "Tags", "value": "2" }
+          ]
+        },
+        "options": {}
+      }
+    ],
+    "seo": {
+      "metaTitle": null,
+      "metaDescription": "Example fixture homepage.",
+      "robotsIndex": true,
+      "robotsFollow": true
+    }
+  },
+  {
+    "slug": "about-the-fixtures",
+    "title": "About the fixtures",
+    "type": "static",
+    "status": "published",
+    "system_managed": true,
+    "html": "<h1>About the fixtures</h1><p>This page was seeded by <code>seed:fixtures example</code>. It demonstrates a <strong>static</strong> page — HTML pasted directly, sanitized on save, rendered on /about-the-fixtures.</p>",
+    "css": "h1 { color: #333; } p { line-height: 1.6; }",
+    "seo": {
+      "metaTitle": "About the fixtures",
+      "metaDescription": "A static-type page seeded from a JSON fixture."
+    }
+  }
+]

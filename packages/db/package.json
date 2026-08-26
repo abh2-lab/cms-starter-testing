@@ -1,0 +1,46 @@
+{
+  "name": "@cms/db",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Drizzle ORM schema and Postgres client for the CMS",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema/index.d.ts",
+      "import": "./dist/schema/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "migrations"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rimraf dist .turbo",
+    "db:generate": "corepack pnpm --filter @cms/db... build && dotenv -e ../../.env -- drizzle-kit generate",
+    "db:migrate": "corepack pnpm --filter @cms/db... build && dotenv -e ../../.env -- drizzle-kit migrate",
+    "db:push": "corepack pnpm --filter @cms/db... build && dotenv -e ../../.env -- drizzle-kit push",
+    "db:studio": "corepack pnpm --filter @cms/db... build && dotenv -e ../../.env -- drizzle-kit studio"
+  },
+  "dependencies": {
+    "@cms/config": "workspace:*",
+    "@cms/types": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "drizzle-zod": "^0.8.3",
+    "postgres": "^3.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "dotenv-cli": "^8.0.0",
+    "drizzle-kit": "^0.31.10",
+    "rimraf": "^6.0.1",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,51 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+# Force a single drizzle-orm instance across the workspace. Without this,
+# @sentry/node v10's OpenTelemetry deps create a duplicate drizzle-orm peer
+# install (same version, separate "private" types), and TypeScript starts
+# rejecting cross-package SQL fragments because the two PgColumn classes are
+# nominally distinct. Pinned to >=0.45.2 to clear GHSA-gpj5-g38j-94v9 (SQL
+# injection via improperly escaped identifiers); this also forces the copy
+# Nuxt pulls in transitively (nitropack > db0) up to the patched version.
+overrides:
+  drizzle-orm: 0.45.2
+  # shell-quote <=1.8.3 (GHSA-w7jw-789q-3m8p, critical) reaches us only via
+  # @nuxt/devtools > launch-editor. Bump to the patched 1.8.4 — a tiny,
+  # API-compatible utility, so forcing it across the tree is safe.
+  shell-quote: ^1.8.4
+  # vite 7.0.0-7.3.4 (GHSA-fx2h-pf6j-xcff, high) is a server.fs.deny bypass via
+  # Windows alternate data-stream paths. It reaches us only through the Vite 7
+  # copy under @nuxt/devtools (apps/web). Scope the override to the 7.x line so
+  # it bumps that copy to the patched 7.3.5 WITHOUT dragging the admin app's
+  # separate Vite 6 (apps/admin) up a major version — Vite 6 is not affected by
+  # this advisory.
+  "vite@7": ^7.3.5
+peerDependencyRules:
+  allowedVersions:
+    drizzle-orm: 0.45.2
+allowBuilds:
+  # esbuild ships a platform-specific native binary via postinstall. Required for
+  # drizzle-kit (uses esbuild to bundle drizzle.config.ts) and dotenv-cli.
+  esbuild: true
+  # vue-demi is pulled in by Pinia for Vue 2/3 cross-compat; its postinstall
+  # picks which Vue version to target.
+  vue-demi: true
+  # @parcel/watcher is Nuxt's native file watcher; without its postinstall it
+  # falls back to a slower JS-based watcher in dev.
+  '@parcel/watcher': true
+  # msgpackr-extract is BullMQ's fast (de)serializer for job payloads; the JS
+  # fallback works but is slower. Build the native addon for worker throughput.
+  msgpackr-extract: true
+  # Sharp ships a platform-specific libvips binary downloaded by its install
+  # script. Required for the image-variant pipeline in apps/worker.
+  sharp: true
+auditConfig:
+  ignoreGhsas:
+    # esbuild GHSA-gv7w-rqvm-qjhr (high) is a Deno-specific install-time RCE
+    # (RCE via NPM_CONFIG_REGISTRY when esbuild's binary is fetched by a Deno
+    # module). It reaches us only as build tooling under vite / nitropack /
+    # @nuxt/devtools — never in the production runtime — and we install via
+    # pnpm/Node, not Deno, so the advisory does not apply. Patched in esbuild
+    # >=0.28.1; remove this once the @nuxt/devtools > vite chain ships it.
+    - GHSA-gv7w-rqvm-qjhr

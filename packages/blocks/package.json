@@ -1,0 +1,32 @@
+{
+  "name": "@cms/blocks",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Block + template registry for dynamic Pages (server-side metadata + data loaders)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node scripts/gen-registry.mjs && tsc -p tsconfig.json",
+    "typecheck": "node scripts/gen-registry.mjs && tsc -p tsconfig.json --noEmit",
+    "clean": "rimraf dist .turbo",
+    "gen:registry": "node scripts/gen-registry.mjs"
+  },
+  "dependencies": {
+    "@cms/types": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "typescript": "^6.0.3"
+  }
+}

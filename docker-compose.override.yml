@@ -1,0 +1,64 @@
+# Local development overrides.
+#
+# Docker Compose automatically merges this file on top of docker-compose.yml
+# whenever you run `docker compose up` from this directory. Its ONLY job is to
+# publish container ports to your host so you can reach the stack at
+# localhost:<port> while developing.
+#
+# Coolify does NOT read this file — it consumes docker-compose.yml alone. That
+# separation is deliberate: the host port bindings below would collide with
+# Coolify's own services (Postgres on 5432, etc.) and cause
+# "port is already allocated" deploy failures. Keeping them here means local
+# dev is convenient and Coolify deploys stay clean.
+#
+# Reach the stack locally at:
+#   Admin UI    → http://localhost:8080
+#   Public site → http://localhost:3001
+#   API         → http://localhost:3000   (health at /health, Swagger at /docs)
+#   Worker      → http://localhost:3100   (readiness at /ready)
+#   Postgres    → localhost:5432          (direct, bypasses PgBouncer)
+#   PgBouncer   → localhost:6432          (pooled — matches DATABASE_URL)
+#   Dragonfly   → localhost:6379          (Redis-compatible)
+#   Meilisearch → http://localhost:7700
+#   MinIO       → http://localhost:9000   (console at http://localhost:9001)
+#
+# To reproduce the Coolify (no host ports) topology locally, bypass this file:
+#   docker compose -f docker-compose.yml up -d
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  pgbouncer:
+    ports:
+      - "6432:5432"
+
+  dragonfly:
+    ports:
+      - "6379:6379"
+
+  meilisearch:
+    ports:
+      - "7700:7700"
+
+  minio:
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  api:
+    ports:
+      - "3000:3000"
+
+  worker:
+    ports:
+      - "3100:3100"
+
+  admin:
+    ports:
+      - "8080:80"
+
+  web:
+    ports:
+      - "3001:3001"

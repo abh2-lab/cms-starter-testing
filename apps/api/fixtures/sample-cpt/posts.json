@@ -1,0 +1,68 @@
+[
+  {
+    "content_type_slug": "review",
+    "slug": "acme-widget-pro-review",
+    "title": "Acme Widget Pro — a near-perfect daily driver",
+    "status": "published",
+    "featured": true,
+    "custom_fields": {
+      "rating": 4,
+      "verdict": "Excellent build, minor software rough edges.",
+      "recommended": true,
+      "pros": "Pros: sturdy, fast, great battery. Cons: pricey, no SD slot.",
+      "body": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "This post AND its 'review' content type were created entirely from JSON in apps/api/fixtures/sample-cpt — no admin UI involved. Re-running the seed will not overwrite this row; content is editor-owned."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "taxonomy_terms": [
+      { "taxonomy_slug": "review-genres", "term_slug": "tech" },
+      { "taxonomy_slug": "review-tags", "term_slug": "editors-pick" }
+    ],
+    "seo": {
+      "meta_title": "Acme Widget Pro review",
+      "meta_description": "Our hands-on verdict on the Acme Widget Pro.",
+      "schema_type": "Review"
+    }
+  },
+  {
+    "content_type_slug": "review",
+    "slug": "paperback-classic-review",
+    "title": "Paperback Classic — still worth your shelf space",
+    "status": "published",
+    "custom_fields": {
+      "rating": 5,
+      "verdict": "A timeless read at a budget price.",
+      "recommended": true,
+      "pros": "Pros: cheap, well-bound. Cons: small font.",
+      "body": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "A second review row, so /api/public/archive/review returns a multi-item list."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "taxonomy_terms": [
+      { "taxonomy_slug": "review-genres", "term_slug": "books" },
+      { "taxonomy_slug": "review-tags", "term_slug": "budget" }
+    ]
+  }
+]

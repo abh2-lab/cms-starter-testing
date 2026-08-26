@@ -1,0 +1,1437 @@
+:root {
+  font-family:
+    'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  color-scheme: light;
+
+  --radius: 0.5rem; /* 8px */
+  --radius-sm: 0.375rem; /* 6px */
+  --radius-lg: 0.75rem; /* 12px */
+
+  /* ── Surfaces & text ── */
+  --bg: #f3f4f8;
+  --surface: #ffffff;
+  --surface-2: #fafafa;
+  --fg: #111827;
+  --muted: #6b7280;
+  --text-tertiary: #9ca3af;
+  --border: #e5e7eb;
+  --border-soft: #f0f0f4;
+  --table-head: #fafafa;
+  --row-hover: #fafbfc;
+
+  /* Back-compat aliases — several views were authored against these (mock)
+     token names. They reference the real tokens above, so they automatically
+     flip with the theme (no need to redefine under [data-theme='dark']). */
+  --text-primary: var(--fg);
+  --text-secondary: var(--muted);
+  --card-bg: var(--surface);
+  --page-bg: var(--bg);
+
+  /* ── Accent (amber) ── */
+  --accent: #f59e0b;
+  --accent-hover: #d97706;
+  --accent-soft: rgba(245, 158, 11, 0.12);
+  --accent-contrast: #1f2937;
+
+  /* ── Status palette (solid + soft) ── */
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
+  --success: #059669;
+  --success-soft: #d1fae5;
+  --warning: #d97706;
+  --warning-soft: #fef3c7;
+  --info: #2563eb;
+  --info-soft: #dbeafe;
+  --purple: #7c3aed;
+  --purple-soft: #ede9fe;
+
+  /* ── Sidebar (dark) ── */
+  --sb-bg: #111318;
+  --sb-border: rgba(255, 255, 255, 0.06);
+  --sb-text: #8b949e;
+  --sb-text-hover: #c9d1d9;
+  --sb-active-text: #ffffff;
+  --sb-active-bg: rgba(255, 255, 255, 0.08);
+  --sb-section: #4a5568;
+
+  /* ── Shell metrics ── */
+  --topbar-h: 60px;
+  --sidebar-w: 240px;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 6px 20px rgba(15, 23, 42, 0.08);
+
+  /* ── Highlights & gradients ── */
+  --accent-2: #f97316; /* orange — pairs with amber for gradients */
+  --accent-gradient: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  --highlight: var(--accent-soft); /* selected / active row tint */
+  --ring: 0 0 0 3px var(--accent-soft); /* focus ring */
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   DARK THEME — flips token VALUES only; every view that uses var(--…) follows.
+   Toggled by data-theme="dark" on <html> (see useTheme composable).
+   ════════════════════════════════════════════════════════════════════════ */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0f1115;
+  --surface: #181b22;
+  --surface-2: #20242d;
+  --fg: #e6e9ef;
+  --muted: #9aa4b2;
+  --text-tertiary: #6b7480;
+  --border: #2a2f3a;
+  --border-soft: #21262f;
+  --table-head: #1c212b;
+  --row-hover: #1c212b;
+
+  --accent: #f59e0b;
+  --accent-hover: #fbbf24;
+  --accent-soft: rgba(245, 158, 11, 0.18);
+  --accent-contrast: #1a1d24;
+
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.16);
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.16);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.16);
+  --info: #60a5fa;
+  --info-soft: rgba(96, 165, 250, 0.16);
+  --purple: #a78bfa;
+  --purple-soft: rgba(167, 139, 250, 0.18);
+
+  --sb-bg: #0c0e12;
+  --sb-section: #5b6675;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Dark fixes for primitives that bake in a light-tuned foreground. Higher
+   specificity (attr + class) wins regardless of source order. */
+[data-theme='dark'] .btn-primary {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+[data-theme='dark'] .btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+[data-theme='dark'] .btn-danger {
+  border-color: rgba(248, 113, 113, 0.4);
+}
+[data-theme='dark'] .btn-danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.24);
+}
+[data-theme='dark'] .badge-draft,
+[data-theme='dark'] .badge-viewer {
+  background: #262b35;
+  color: #cbd5e1;
+}
+[data-theme='dark'] .badge-draft::before,
+[data-theme='dark'] .badge-viewer::before {
+  background: #94a3b8;
+}
+[data-theme='dark'] .badge-in_review,
+[data-theme='dark'] .badge-editor {
+  color: #fcd34d;
+}
+[data-theme='dark'] .badge-approved,
+[data-theme='dark'] .badge-admin {
+  color: #93c5fd;
+}
+[data-theme='dark'] .badge-scheduled {
+  color: #c4b5fd;
+}
+[data-theme='dark'] .badge-published,
+[data-theme='dark'] .badge-author {
+  color: #6ee7b7;
+}
+[data-theme='dark'] .badge-archived {
+  color: #fca5a5;
+}
+[data-theme='dark'] .badge-static {
+  color: #93c5fd;
+}
+[data-theme='dark'] .badge-dynamic {
+  color: #c4b5fd;
+}
+[data-theme='dark'] .badge-super_admin {
+  background: rgba(236, 72, 153, 0.16);
+  color: #f9a8d4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--accent-hover);
+}
+
+h1 {
+  margin-top: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+}
+
+h2,
+h3 {
+  letter-spacing: -0.006em;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+/* Thin, themed scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+  background-clip: content-box;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   SHARED DESIGN-SYSTEM PRIMITIVES
+   Reused identically across views; view-specific layout lives in each SFC's
+   <style scoped>. Edit a primitive here once and every view follows.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page header ── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+.page-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--fg);
+}
+.page-subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--fg);
+  color: #fff;
+  border-color: var(--fg);
+}
+.btn-primary:hover:not(:disabled) {
+  background: #1f2937;
+}
+.btn-secondary {
+  background: var(--surface);
+  color: var(--fg);
+  border-color: var(--border);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg);
+}
+.btn-ghost {
+  background: none;
+  color: var(--muted);
+  border-color: transparent;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg);
+  color: var(--fg);
+}
+.btn-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: #fecaca;
+}
+.btn-danger:hover:not(:disabled) {
+  background: #fee2e2;
+}
+.btn-success {
+  background: var(--success);
+  color: #fff;
+  border-color: var(--success);
+}
+.btn-success:hover:not(:disabled) {
+  background: #047857;
+}
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.btn-xs {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* ── Stat cards ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.stat-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.stat-value {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--fg);
+  margin-top: 6px;
+  line-height: 1.1;
+}
+.stat-change {
+  display: block;
+  font-size: 12px;
+  color: var(--success);
+  margin-top: 6px;
+}
+.stat-change.muted {
+  color: var(--muted);
+}
+.stat-change.warn {
+  color: var(--warning);
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 4px;
+  text-transform: capitalize;
+}
+.badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+.badge-draft {
+  background: #f3f4f6;
+  color: #374151;
+}
+.badge-draft::before {
+  background: #9ca3af;
+}
+.badge-in_review {
+  background: var(--warning-soft);
+  color: #92400e;
+}
+.badge-in_review::before {
+  background: var(--warning);
+}
+.badge-approved {
+  background: var(--info-soft);
+  color: #1e3a8a;
+}
+.badge-approved::before {
+  background: var(--info);
+}
+.badge-scheduled {
+  background: var(--purple-soft);
+  color: #4c1d95;
+}
+.badge-scheduled::before {
+  background: var(--purple);
+}
+.badge-published {
+  background: var(--success-soft);
+  color: #064e3b;
+}
+.badge-published::before {
+  background: var(--success);
+}
+.badge-archived {
+  background: var(--danger-soft);
+  color: #7f1d1d;
+}
+.badge-archived::before {
+  background: var(--danger);
+}
+.badge-super_admin {
+  background: #fdf2f8;
+  color: #701a75;
+}
+.badge-admin {
+  background: var(--info-soft);
+  color: #1e3a8a;
+}
+.badge-editor {
+  background: var(--warning-soft);
+  color: #92400e;
+}
+.badge-author {
+  background: var(--success-soft);
+  color: #064e3b;
+}
+.badge-viewer {
+  background: #f3f4f6;
+  color: #374151;
+}
+/* Page-type badges. Mirror the status-badge shape so listings can mix
+   .badge-static / .badge-dynamic alongside .badge-published etc. */
+.badge-static {
+  background: var(--info-soft);
+  color: #1e3a8a;
+}
+.badge-static::before {
+  background: var(--info);
+}
+.badge-dynamic {
+  background: var(--purple-soft);
+  color: #4c1d95;
+}
+.badge-dynamic::before {
+  background: var(--purple);
+}
+
+/* ── Activity feed rows ── */
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.activity-item:last-child {
+  border-bottom: none;
+}
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.activity-text {
+  font-size: 13px;
+  color: var(--muted);
+}
+.activity-text strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.activity-time {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+/* ── Health rows ── */
+.health-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.health-item:last-child {
+  border-bottom: none;
+}
+.health-label {
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.health-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--text-tertiary);
+}
+.empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* ── Data tables (mockup .table-wrap card) ───────────────────────────────────
+   Pages wrap their <table class="table"> in <div class="table-wrap"> and rely on
+   these shared rules — no per-page table CSS needed. */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+.search-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 7px 12px;
+  flex: 1;
+  max-width: 280px;
+  color: var(--text-tertiary);
+}
+.search-input input {
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  outline: none;
+  width: 100%;
+}
+.search-input input::placeholder {
+  color: var(--text-tertiary);
+}
+.select-filter {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 7px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--surface);
+  cursor: pointer;
+  outline: none;
+}
+.select-filter:focus {
+  border-color: var(--accent);
+}
+
+/* Selectors are scoped under .table-wrap so they override any leftover
+   per-page scoped `.table` rules (higher specificity), letting every wrapped
+   table adopt the mockup look without editing each page's <style>. */
+.table-wrap .table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-wrap .table thead th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 10px 20px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  background: var(--table-head);
+  white-space: nowrap;
+}
+.table-wrap .table tbody tr {
+  border-bottom: 1px solid var(--border-soft);
+  transition: background 0.1s ease;
+}
+.table-wrap .table tbody tr:last-child {
+  border-bottom: none;
+}
+.table-wrap .table tbody tr:hover {
+  background: var(--row-hover);
+}
+/* Row height + horizontal padding mirror the mockup spec: cells supply
+   alignment, the row itself sets the 56px target. Per-page overrides are
+   discouraged — when content has to be taller, use a taller padding inside
+   the cell's slot, not a different row height. */
+.table-wrap .table tbody td {
+  padding: 0 20px;
+  height: 56px;
+  font-size: 13.5px;
+  color: var(--fg);
+  vertical-align: middle;
+  border-bottom: none;
+}
+/* Title column absorbs slack; trailing columns hug their content so actions
+   sit snug at the right instead of floating in an empty band. */
+.table-wrap .table th:first-child,
+.table-wrap .table td:first-child {
+  width: 100%;
+}
+.table-wrap .table th:last-child,
+.table-wrap .table td:last-child {
+  white-space: nowrap;
+}
+.table-wrap .actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  align-items: center;
+}
+.table-wrap .mono {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12.5px;
+}
+
+/* Square icon action button (edit/delete in tables, cards) */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+}
+.icon-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.icon-btn--danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+.icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Content-type cards (mockup .ct-card grid) ── */
+.ct-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.ct-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition: border-color 0.15s;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.ct-card:hover {
+  border-color: var(--accent);
+}
+.ct-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ct-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+.ct-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.ct-slug {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  margin-top: 2px;
+}
+.ct-stats {
+  display: flex;
+  gap: 16px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
+}
+.ct-stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg);
+}
+.ct-stat-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.ct-card--new {
+  border-style: dashed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  gap: 8px;
+}
+.ct-card--new:hover {
+  border-color: var(--accent);
+  color: var(--fg);
+}
+
+/* ── Field-builder rows (mockup .field-item) ── */
+.field-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 12px 14px;
+  transition: border-color 0.15s;
+}
+.field-item:hover {
+  border-color: var(--text-tertiary);
+}
+.field-type-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.field-name-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.field-name-main {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--fg);
+}
+.field-name-key {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.field-required {
+  font-size: 10px;
+  color: var(--danger);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.field-info {
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ── Form controls (shared) ── */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--fg);
+  background: var(--surface);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--accent);
+}
+/* Chrome on Windows draws the native <select> popup with its own colors
+   when the host element has a custom `color` set — unselected options end
+   up dim grey on dark backgrounds. Setting bg + color on <option> directly
+   makes the popup readable in both themes. Same tokens that flip on
+   [data-theme='dark'] keep the rule one-liner.
+   Targeting `select option` (not `.form-select option`) so bare selects in
+   modals/scoped components are covered too — Chrome only honors a handful
+   of properties on <option>, so the broad selector is safe. !important
+   guards against per-component scoped overrides since Vue scoped styles
+   compile to attribute selectors that tie with this rule's specificity. */
+select option,
+.form-select option {
+  background-color: var(--surface) !important;
+  color: var(--fg) !important;
+}
+/* Selected / hovered option: the native popup paints these with a light
+   highlight, so the text must be DARK to stay legible. The old translucent
+   --accent-soft composited to pale cream in the Windows popup while the text
+   stayed light (--fg) — i.e. it vanished. Opaque --accent + dark
+   --accent-contrast reads correctly however the popup composites, in both
+   themes. :hover is included because Chrome otherwise paints a bare system
+   highlight with no guaranteed contrast against the forced --fg text. */
+select option:checked,
+.form-select option:checked,
+select option:hover,
+.form-select option:hover {
+  background-color: var(--accent) !important;
+  color: var(--accent-contrast) !important;
+}
+/* Explicit per-element color-scheme: on Windows, Chrome's native popup
+   sometimes ignores the document-level color-scheme when the <select> has
+   custom background/color set. Restating it on the element forces the
+   correct popup tone in dark mode. */
+[data-theme='dark'] select,
+[data-theme='dark'] .form-select {
+  color-scheme: dark;
+}
+/* accent-color tints the selected-option highlight in the native popup;
+   without this Chrome paints it system blue regardless of theme. */
+select,
+.form-select {
+  accent-color: var(--accent);
+}
+.form-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+
+/* ── Sortable table headers ────────────────────────────────────────────────
+   Extends `.table-wrap .table thead th` — add `.sortable` to make a header
+   clickable, `.sorted` when it's the active sort column. The arrow is just a
+   trailing <span class="sort-arrow"> the SFC renders (↕ / ↑ / ↓). */
+.table-wrap .table thead th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.table-wrap .table thead th.sortable:hover {
+  color: var(--fg);
+}
+.sort-arrow {
+  margin-left: 4px;
+  font-size: 10px;
+  opacity: 0.4;
+}
+.table-wrap .table thead th.sorted .sort-arrow {
+  opacity: 1;
+  color: var(--accent);
+}
+
+/* ── Numbered pagination ───────────────────────────────────────────────────
+   Sits inside .table-wrap below the table body; primitives are reused by
+   any listing that switches to page+offset (Pages today, Content later). */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-soft);
+}
+.page-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+.page-btn:hover:not(:disabled):not(.active) {
+  background: var(--bg);
+  color: var(--fg);
+}
+.page-btn.active {
+  background: var(--fg);
+  color: var(--surface);
+  border-color: var(--fg);
+}
+.page-btn.arrow {
+  font-size: 14px;
+}
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.page-ellipsis {
+  width: 22px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.page-info {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ── Bulk-action bar ───────────────────────────────────────────────────────
+   Slim dark strip that appears above the table-wrap whenever rows are
+   selected. Primary actions (Publish/Archive) get the neutral chip; Delete
+   gets the danger variant. */
+.bulk-bar {
+  background: var(--fg);
+  color: var(--surface);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  margin-bottom: -1px;
+}
+.bulk-count {
+  font-weight: 700;
+  color: var(--accent);
+}
+.bulk-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.bulk-btn {
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.bulk-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+.bulk-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.bulk-btn.danger {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+.bulk-btn.danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.28);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   EDITOR TOPBAR PRIMITIVES
+   Shared by PageEditStatic (inside AppLayout, sticky) and the unified blocks
+   editor (BlocksEditor, full-screen, fixed 52px). View-specific positioning
+   lives in each SFC's scoped style. The `.editor-topbar--fixed` modifier opts
+   the full-screen editor into the slimmer 52px/16px sizing the mockup specifies.
+   ════════════════════════════════════════════════════════════════════════ */
+.editor-topbar {
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 12px;
+}
+.editor-topbar--fixed {
+  height: 52px;
+  padding: 0 16px;
+}
+
+.et-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.et-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.et-back:hover {
+  background: var(--bg);
+  color: var(--fg);
+}
+.et-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  margin: 0 12px;
+  flex-shrink: 0;
+}
+.et-identity {
+  min-width: 0;
+}
+.et-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.et-name-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-weight: 400;
+}
+.et-name:hover .et-name-hint {
+  opacity: 1;
+}
+.et-slug {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+}
+
+.et-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.save-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.save-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.save-badge--unsaved {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+.save-badge--unsaved .save-dot {
+  background: var(--warning);
+  animation: blink 1.4s infinite;
+}
+.save-badge--saving {
+  background: var(--info-soft);
+  color: var(--info);
+}
+.save-badge--saving .save-dot {
+  background: var(--info);
+}
+.save-badge--saved {
+  background: var(--success-soft);
+  color: var(--success);
+}
+.save-badge--saved .save-dot {
+  background: var(--success);
+}
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Reusable loading spinner — a thin ring with one accent arc. Size/color can be
+   overridden per use via width/height/border-width and border-top-color. */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.et-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--surface-2);
+  color: var(--muted);
+  box-shadow: inset 0 0 0 1px var(--border);
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+.status-pill::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  display: inline-block;
+}
+.status-pill--published {
+  background: var(--success-soft);
+  color: var(--success);
+}
+.status-pill--published::before {
+  background: var(--success);
+}
+.status-pill--in_review {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+.status-pill--in_review::before {
+  background: var(--warning);
+}
+.status-pill--approved {
+  background: var(--info-soft);
+  color: var(--info);
+}
+.status-pill--approved::before {
+  background: var(--info);
+}
+.status-pill--scheduled {
+  background: var(--purple-soft);
+  color: var(--purple);
+}
+.status-pill--scheduled::before {
+  background: var(--purple);
+}
+.status-pill--archived {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.status-pill--archived::before {
+  background: var(--danger);
+}
+
+.et-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.et-btn:hover:not(:disabled) {
+  background: var(--bg);
+  color: var(--fg);
+}
+.et-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.et-more-wrap {
+  position: relative;
+}
+.et-more {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.et-more:hover {
+  background: var(--bg);
+  color: var(--fg);
+}
+.et-more-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 180px;
+  z-index: 100;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+}
+.et-more-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  cursor: pointer;
+  color: var(--fg);
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s;
+}
+.et-more-item:hover:not(:disabled) {
+  background: var(--bg);
+}
+.et-more-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.et-more-item--danger {
+  color: var(--danger);
+}
+.et-more-item--danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+.et-more-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.et-publish {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 18px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: var(--success);
+  color: #fff;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.et-publish:hover:not(:disabled) {
+  background: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(5, 150, 105, 0.28);
+}
+.et-publish:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* Neutral fallback when no publish transition is available — same shape,
+   triggers a save-draft instead. */
+.et-publish--neutral {
+  /* Always-dark chrome token (stable in both themes) so the white label stays
+     readable — NOT var(--fg), which flips light in dark mode. */
+  background: var(--sb-bg);
+}
+.et-publish--neutral:hover:not(:disabled) {
+  background: #1f2937;
+  box-shadow: 0 3px 10px rgba(17, 24, 39, 0.18);
+}

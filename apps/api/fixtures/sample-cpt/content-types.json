@@ -1,0 +1,46 @@
+[
+  {
+    "slug": "review",
+    "name": "Review",
+    "description": "Product and media reviews — a custom post type created entirely from a CLI fixture (no admin UI).",
+    "icon": "⭐",
+    "previewPath": "/review/{slug}",
+    "settings": {
+      "taxonomies": {
+        "categories": ["review-genres"],
+        "tags": ["review-tags"]
+      }
+    },
+    "fields": [
+      {
+        "name": "rating",
+        "label": "Rating (1–5)",
+        "type": "number",
+        "required": true,
+        "validations": { "min": 1, "max": 5 }
+      },
+      {
+        "name": "verdict",
+        "label": "One-line verdict",
+        "type": "short_text",
+        "required": true
+      },
+      {
+        "name": "body",
+        "label": "Body",
+        "type": "rich_text",
+        "required": true
+      },
+      {
+        "name": "pros",
+        "label": "Pros & cons",
+        "type": "long_text"
+      },
+      {
+        "name": "recommended",
+        "label": "Recommended?",
+        "type": "boolean"
+      }
+    ]
+  }
+]

@@ -1,0 +1,37 @@
+# Exclude host-side build artifacts and platform-specific node_modules.
+# Sharp/argon2 native binaries on Windows/macOS can't run inside Linux containers,
+# so we let each Docker build install its own.
+node_modules
+**/node_modules
+**/dist
+**/.turbo
+**/.nuxt
+**/.output
+**/coverage
+
+# VCS, env, IDE
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+**/*.log
+.vscode
+.idea
+.DS_Store
+
+# Docs / planning that shouldn't enter the build context
+.claude
+*.md
+!README.md
+
+# Test artifacts
+**/__snapshots__
+**/test-results
+
+# Generated at build time by packages/blocks/scripts/gen-registry.mjs (which the
+# image's `turbo run build` invokes). Excluded for the same reason as **/dist:
+# a host-generated copy must never leak into the image and mask a codegen that
+# would otherwise fail. Also makes a local `docker build` behave exactly like
+# CI, which clones from git and never has this file.
+packages/blocks/src/generated-modules.ts

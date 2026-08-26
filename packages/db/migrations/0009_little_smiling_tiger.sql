@@ -1,0 +1,2 @@
+CREATE TYPE "public"."submission_access" AS ENUM('none', 'authenticated', 'public');--> statement-breakpoint
+ALTER TABLE "content_types" ADD COLUMN "submission_access" "submission_access" DEFAULT 'none' NOT NULL;

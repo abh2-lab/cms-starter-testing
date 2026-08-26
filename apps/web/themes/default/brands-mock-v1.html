@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PING — /brands page mock v1</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap"
+    />
+
+    <!-- THE REAL STYLESHEET, same trick design-guide.html uses: link it rather
+         than copy it, so every token below is whatever the theme says right now.
+         Tokens, the resets and .container-custom all come from here. -->
+    <link rel="stylesheet" href="./app/assets/css/theme.css" />
+
+    <style>
+      /* ══════════════════════════════════════════════════════════════════════
+         /brands — MOCK v1
+
+         v1 is a rewrite, not a recolour. It drops the reference layout and
+         rebuilds each section out of idioms the PING pages already use:
+
+           1 hero        ← BlockMarketingHero   (home)
+           2 capabilities← BlockServicesCards   (home)
+           3 outcomes    ← BlockShieldStats     (ping-shield)
+           4 our work    ← BlockKnowledgeCards  (knowledge)
+           5 cta         ← BlockShieldCta + BlockShieldModel's panel (ping-shield)
+
+         Band rhythm follows home: a strong colour band per section, never two
+         the same in a row —  #4295f8 → #92deff → #ffffff → #92deff → #ffffff.
+
+         NO UPPERCASE EYEBROWS. The small letter-spaced --fs-xs eyebrow exists in
+         the CSS but every PING page leaves that field EMPTY, so it never renders
+         on the live site. The only section-opener PING actually shows is the
+         34px bold Title Case kicker — calc(var(--fs-h2) - 4px) — as used by
+         shield-cost, shield-stats and shield-how.
+         ══════════════════════════════════════════════════════════════════ */
+
+      /* ── MOCK CHROME (.mk-) — labels + toggle. Not part of the design. ─── */
+      .mk-bar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        background: #0a1a5c;
+        color: #cddcff;
+        padding: 9px 18px;
+        font-size: 13px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .mk-bar b {
+        color: #fff;
+        letter-spacing: 0.04em;
+      }
+      .mk-bar span {
+        opacity: 0.75;
+      }
+      .mk-bar button {
+        margin-left: auto;
+        background: #ff6a4d;
+        color: #fff;
+        border: 0;
+        border-radius: 999px;
+        padding: 6px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .mk-tag {
+        display: block;
+        background: #0a1a5c;
+        color: #92deff;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        padding: 7px 18px;
+      }
+      .mk-tag b {
+        color: #fff;
+      }
+      body.mk-clean .mk-tag {
+        display: none;
+      }
+
+      /* ══════════════════════════════════════════════════════════════════════
+         SECTION 1 — brands-hero          pattern: BlockMarketingHero
+         Mid-blue band, LEFT-aligned copy, sky swoosh bleeding behind, orange
+         pill. Taller than --section-y (space-12), exactly like the home hero.
+         ══════════════════════════════════════════════════════════════════ */
+      .bh {
+        position: relative;
+        overflow: hidden;
+        background: #4295f8;
+        padding: var(--space-12) 0;
+      }
+      /* A DIFFERENT curve to home's: the tall ribbon from BlockTeamGrid
+         (722x1194), mirrored, rather than home's wide swoosh (629x384).
+         Sized with the home hero's COVER recipe — inset 0 at 100%/100% with
+         `slice`, so it fills the whole band and crops the overflow. The
+         `height: 116%; width: auto` + `meet` recipe from BlockAboutIntro is the
+         sit-in-a-corner technique and letterboxes this tall viewBox into a
+         narrow strip here, leaving dead colour beside it. */
+      .bh-swoosh {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+      }
+      .bh-inner {
+        position: relative;
+        z-index: 1;
+      }
+      /* No eyebrow here. The live home hero leaves its eyebrow field empty, so
+         the real PING hero opens straight on the heading. */
+      .bh-heading {
+        color: #ffffff;
+        font-size: var(--fs-h1);
+        font-weight: var(--fw-semibold);
+        line-height: var(--lh-tight);
+        max-width: 760px;
+        margin: 0 0 var(--space-5);
+      }
+      .bh-subtext {
+        color: #ffffff;
+        font-size: var(--fs-lead);
+        font-weight: var(--fw-regular);
+        line-height: var(--lh-body);
+        max-width: 600px;
+        margin: 0 0 var(--space-6);
+      }
+      .bh-cta {
+        display: inline-flex;
+        align-items: center;
+        background: #ff6a4d;
+        color: #fff;
+        font-weight: var(--fw-semibold);
+        font-size: calc(var(--fs-sm) + 1px);
+        padding: calc(var(--space-3) - 1px) calc(var(--space-8) + 4px);
+        border-radius: 999px;
+        text-decoration: none;
+        transition: background 0.2s;
+      }
+      .bh-cta:hover {
+        background: #e0532f;
+      }
+
+      /* ══════════════════════════════════════════════════════════════════════
+         SECTION 2 — brands-capabilities  pattern: BlockServicesCards
+         Sky band, centred heading, navy sliding cards, white round arrows.
+         Arrows are the affordance — PING uses no dot row, so v1 drops it.
+         ══════════════════════════════════════════════════════════════════ */
+      .bc {
+        background: #92deff;
+        padding: var(--section-y) 0;
+      }
+      /* Same here — services-cards ships with an empty eyebrow on home, so the
+         section opens on its centred title. */
+      .bc-title {
+        color: #0f2d96;
+        text-align: center;
+        font-size: var(--fs-h2);
+        font-weight: var(--fw-semibold);
+        line-height: var(--lh-tight);
+        margin: 0 0 var(--space-8);
+        white-space: pre-line;
+      }
+      .bc-carousel {
+        position: relative;
+      }
+      .bc-track {
+        --per-view: 3;
+        --card-gap: var(--space-6);
+        display: flex;
+        gap: var(--card-gap);
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        list-style: none;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .bc-track::-webkit-scrollbar {
+        display: none;
+      }
+      .bc-card {
+        flex: 0 0
+          calc((100% - (var(--per-view) - 1) * var(--card-gap)) / var(--per-view));
+        scroll-snap-align: start;
+        background: #0f2d96;
+        border-radius: 18px;
+        padding: var(--space-6);
+      }
+      .bc-card-title {
+        color: #ffffff;
+        font-size: var(--fs-h3);
+        font-weight: var(--fw-semibold);
+        margin: 0 0 var(--space-4);
+      }
+      .bc-card-desc {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: var(--fs-body);
+        font-weight: var(--fw-regular);
+        line-height: var(--lh-body);
+        margin: 0;
+      }
+      .bc-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border: none;
+        border-radius: 50%;
+        background: #ffffff;
+        color: #0f2d96;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(15, 45, 150, 0.25);
+      }
+      .bc-arrow:hover {
+        background: #ff6a4d;
+        color: #ffffff;
+      }
+      .bc-arrow svg {
+        width: 22px;
+        height: 22px;
+      }
+      .bc-arrow--prev {
+        left: calc(-1 * var(--space-5));
+      }
+      .bc-arrow--next {
+        right: calc(-1 * var(--space-5));
+      }
+
+      /* ══════════════════════════════════════════════════════════════════════
+         SECTION 3 — brands-outcomes      pattern: BlockShieldStats
+         White band + sky swoosh. The three reasons become NUMBERED ROWS with
+         the 90px display number PING uses on home, shield-how and shield-stats.
+         Last row accents orange — the shield-stats signature.
+         ══════════════════════════════════════════════════════════════════ */
+      .bo {
+        position: relative;
+        overflow: hidden;
+        background: #ffffff;
+        padding: var(--section-y) 0;
+      }
+      .bo-swoosh {
+        position: absolute;
+        top: -6%;
+        right: -4%;
+        height: 116%;
+        width: auto;
+        z-index: 0;
+        pointer-events: none;
+      }
+      .bo-inner {
+        position: relative;
+        z-index: 1;
+      }
+      /* THE PING KICKER — the only section-opener that actually renders on the
+         live site (shield-cost "The Cost of Piracy", shield-stats "3-Year Track
+         Record", shield-how "How it works"). Title Case, 4px under --fs-h2,
+         bold. Never uppercase, never letter-spaced. */
+      .bo-kicker {
+        color: #0f2d96;
+        font-size: calc(var(--fs-h2) - 4px);
+        font-weight: var(--fw-bold);
+        line-height: var(--lh-tight);
+        max-width: 600px;
+        margin: 0 0 var(--space-4);
+      }
+      .bo-subtitle {
+        color: #0f2d96;
+        font-size: var(--fs-body);
+        line-height: var(--lh-body);
+        max-width: 560px;
+        margin: 0 0 var(--space-8);
+      }
+      .bo-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-7);
+      }
+      /* fr, not %, so the --space-6 gap can't push the row past 100%.
+         minmax(0, …) stops a long word widening its own column. */
+      .bo-row {
+        display: grid;
+        grid-template-columns: minmax(0, 22fr) minmax(0, 78fr);
+        gap: var(--space-6);
+        align-items: start;
+      }
+      .bo-num {
+        color: #0f2d96;
+        font-size: calc(var(--fs-display) + 16px);
+        font-weight: var(--fw-bold);
+        line-height: 1;
+      }
+      .bo-row-title {
+        color: #0f2d96;
+        font-size: var(--fs-h3);
+        font-weight: var(--fw-bold);
+        line-height: var(--lh-snug);
+        margin: 0 0 var(--space-3);
+      }
+      .bo-row-desc {
+        color: #0f2d96;
+        font-size: var(--fs-body);
+        line-height: var(--lh-body);
+        margin: 0;
+        max-width: 62ch;
+      }
+      .bo-row--accent .bo-num,
+      .bo-row--accent .bo-row-title {
+        color: #ff6a4d;
+      }
+
+      /* ══════════════════════════════════════════════════════════════════════
+         SECTION 4 — brands-work          pattern: BlockKnowledgeCards
+         ← THE ONE THAT READS THE `brands` CPT.
+         PING cards have NO box and NO border: a 20px-rounded 16/9 thumbnail
+         with a bold --fs-h3 title under it. Placeholder colours cycle the
+         palette, exactly like knowledge-cards does today.
+         ══════════════════════════════════════════════════════════════════ */
+      .bw {
+        background: #92deff;
+        padding: var(--section-y) 0;
+      }
+      .bw-title {
+        color: #0f2d96;
+        font-size: var(--fs-h2);
+        font-weight: var(--fw-bold);
+        line-height: var(--lh-tight);
+        margin: 0 0 var(--space-4);
+      }
+      .bw-sub {
+        color: #0f2d96;
+        font-size: var(--fs-body);
+        line-height: var(--lh-body);
+        max-width: 560px;
+        margin: 0 0 var(--space-8);
+      }
+      .bw-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-7);
+        list-style: none;
+      }
+      .bw-card {
+        display: flex;
+        flex-direction: column;
+      }
+      .bw-thumb {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 20px;
+        overflow: hidden;
+      }
+      .bw-ph {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .bw-card-title {
+        color: #0f2d96;
+        font-size: var(--fs-h3);
+        font-weight: var(--fw-bold);
+        line-height: var(--lh-snug);
+        margin: var(--space-4) 0 0;
+      }
+      .bw-card-excerpt {
+        color: #0f2d96;
+        font-size: var(--fs-body);
+        line-height: var(--lh-body);
+        margin: var(--space-3) 0 0;
+      }
+
+      /* ══════════════════════════════════════════════════════════════════════
+         SECTION 5 — brands-cta           pattern: BlockShieldCta + BlockShieldModel
+         Your reference is a black rounded panel inset from the page edge with
+         two buttons. PING's dark is navy, and it already has the inset-panel
+         idiom (shield-model's 28px card on a band), so this is that panel
+         carrying shield-cta's centred heading + subtext + pill.
+         ══════════════════════════════════════════════════════════════════ */
+      .bt {
+        background: #ffffff;
+        padding: var(--section-y) 0;
+      }
+      .bt-panel {
+        background: #0f2d96;
+        border-radius: 28px;
+        padding: var(--space-12) var(--space-9);
+        text-align: center;
+      }
+      .bt-heading {
+        color: #ffffff;
+        font-size: var(--fs-h1);
+        font-weight: var(--fw-bold);
+        line-height: var(--lh-tight);
+        max-width: 20ch;
+        margin: 0 auto var(--space-4);
+      }
+      .bt-subtext {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: var(--fs-lead);
+        line-height: var(--lh-body);
+        max-width: 620px;
+        margin: 0 auto var(--space-7);
+      }
+      .bt-actions {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+      }
+      /* Primary = the standard orange pill, unchanged. */
+      .bt-btn {
+        display: inline-flex;
+        align-items: center;
+        background: #ff6a4d;
+        color: #fff;
+        border-radius: 999px;
+        font-size: calc(var(--fs-sm) + 1px);
+        font-weight: var(--fw-semibold);
+        padding: calc(var(--space-3) - 1px) calc(var(--space-8) + 4px);
+        text-decoration: none;
+        transition: background 0.2s;
+      }
+      .bt-btn:hover {
+        background: #e0532f;
+      }
+      /* NEW — PING has no second button style today. Outlined white pill, same
+         size and radius as the orange one so they sit as a pair. The 2px border
+         is inset with box-shadow rather than `border`, so both buttons keep an
+         identical height. */
+      .bt-btn--ghost {
+        background: transparent;
+        color: #ffffff;
+        box-shadow: inset 0 0 0 2px #ffffff;
+      }
+      .bt-btn--ghost:hover {
+        background: #ffffff;
+        color: #0f2d96;
+      }
+
+      /* ── Breakpoints: 768 and 1024 only, per the design guide ───────────── */
+      @media (max-width: 1024px) {
+        .bc-track {
+          --per-view: 2;
+        }
+      }
+      @media (max-width: 768px) {
+        .bc-track {
+          --per-view: 1;
+          --card-gap: var(--space-4);
+        }
+        .bc-arrow--prev {
+          left: var(--space-2);
+        }
+        .bc-arrow--next {
+          right: var(--space-2);
+        }
+        /* Both curves off on phones. At 375px the ribbon is wider than the
+           viewport and slides under the copy — white text over #92deff is not
+           readable. Same call BlockShieldHow makes for its curve. */
+        .bh-swoosh,
+        .bo-swoosh {
+          display: none;
+        }
+        .bo-row {
+          grid-template-columns: 1fr;
+          gap: var(--space-2);
+        }
+        .bw-grid {
+          grid-template-columns: 1fr;
+          gap: var(--space-6);
+        }
+        .bt-panel {
+          padding: var(--space-8) var(--space-5);
+          border-radius: 20px;
+        }
+        .bt-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .bt-btn {
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="mk-bar">
+      <b>MOCK v1 — /brands</b>
+      <span>5 sections · rebuilt from real PING blocks · no uppercase eyebrows · dummy copy</span>
+      <button type="button" id="mk-toggle">Hide labels</button>
+    </div>
+
+    <!-- ───────────────────────────────────────────────────── SECTION 1 -->
+    <p class="mk-tag">
+      SECTION 1 · block <b>brands-hero</b> · follows <b>BlockMarketingHero</b> (home) ·
+      left-aligned on mid-blue with the sky swoosh · no eyebrow — the live home hero
+      leaves it empty · fields: heading, subtext, cta_label, cta_url
+    </p>
+
+    <section class="bh">
+      <!-- BlockTeamGrid's tall ribbon (not the home hero's wide swoosh), mirrored. -->
+      <!-- Converging sweep — matches BlockBrandsHero.vue. -->
+      <!-- One unbroken tapered stroke. Matches BlockPageHero.vue. -->
+      <svg
+        class="bh-swoosh"
+        viewBox="0 0 1440 520"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <path d="M-158.9 610.1 L-146.2 608 L-129.4 605.6 L-109.3 602.8 L-86.4 599.6 L-61.4 596.1 L-34.6 592.3 L-6.6 588.1 L22.1 583.6 L51.3 578.8 L80.3 573.6 L108.9 568.1 L136.5 562.2 L163 555.8 L187.9 549 L211.7 541.2 L234.5 532.7 L256.1 523.5 L276.7 513.9 L296.4 504.1 L315.3 494.3 L333.4 484.5 L350.9 474.9 L367.9 465.8 L384.4 457.1 L400.5 449 L416.4 441.7 L432.1 435.1 L447.8 429.3 L464.4 424.1 L481.2 419.4 L498.5 415.2 L516.1 411.4 L534.2 408 L552.6 404.7 L571.4 401.5 L590.6 398.4 L610.2 395.1 L630.1 391.6 L650.4 387.8 L670.9 383.5 L691.8 378.5 L713 372.9 L732.9 367 L753 361 L773.2 354.7 L793.5 348.1 L813.8 341.4 L834.1 334.4 L854.5 327.2 L874.8 319.8 L895.2 312.2 L915.4 304.4 L935.6 296.4 L955.7 288.1 L975.7 279.7 L995.5 271 L1016.1 261.5 L1035.9 251.3 L1055.1 240.7 L1073.8 229.8 L1092 218.8 L1110 207.8 L1127.8 196.8 L1145.5 186.1 L1163.4 175.6 L1181.4 165.6 L1199.8 156.1 L1218.5 147.1 L1237.9 138.8 L1257.9 131.4 L1279.8 124.5 L1304.2 117.9 L1330.5 111.7 L1358.2 105.9 L1386.7 100.4 L1415.6 95.3 L1444.4 90.5 L1472.5 86 L1499.5 81.7 L1525 77.8 L1548.4 74 L1569.3 70.5 L1587.2 67.1 L1601.8 63.9 L1598.2 40.1 L1584 40.8 L1566 41.6 L1545 42.6 L1521.4 43.9 L1495.6 45.5 L1468.1 47.3 L1439.4 49.5 L1409.9 52.1 L1380.2 55 L1350.6 58.3 L1321.5 62.1 L1293.5 66.3 L1266.9 71.2 L1242.1 76.6 L1218.7 82.9 L1196.1 90.1 L1174.3 98.1 L1153.2 106.7 L1132.8 115.7 L1112.9 125 L1093.5 134.4 L1074.5 143.8 L1055.8 153.1 L1037.3 162.1 L1019.1 170.7 L1000.9 178.8 L982.7 186.2 L964.5 193 L944.9 199.7 L925.2 206.3 L905.4 212.7 L885.5 218.9 L865.5 224.9 L845.5 230.8 L825.5 236.5 L805.5 242 L785.6 247.3 L765.7 252.5 L745.8 257.4 L726.1 262.2 L706.5 266.8 L687 271.1 L668.9 274.8 L650.7 277.9 L632.2 280.6 L613.6 283 L594.7 285.2 L575.5 287.2 L556.1 289.3 L536.4 291.5 L516.4 294 L496.1 296.8 L475.5 300.2 L454.7 304.2 L433.5 309 L412.2 314.7 L390.5 321.6 L369.7 329.4 L349.6 337.7 L330.3 346.4 L311.5 355.4 L293.2 364.5 L275.3 373.5 L257.7 382.3 L240.3 390.8 L222.9 398.9 L205.5 406.4 L188 413.3 L170.3 419.5 L152.1 425 L131.8 430.2 L108.8 435.4 L83.7 440.4 L57.2 445.2 L29.8 449.8 L1.9 454.2 L-25.9 458.3 L-53.1 462.1 L-79.4 465.7 L-104.2 469 L-127.1 472.1 L-147.8 474.9 L-165.8 477.5 L-181.1 479.9Z" fill="#92DEFF" />
+      </svg>
+      <div class="container-custom bh-inner">
+        <h1 class="bh-heading">Creator-led brand work that feels credible — and performs.</h1>
+        <p class="bh-subtext">
+          We help brands collaborate with creators at scale, backed by strong
+          governance, clean execution, and real reporting.
+        </p>
+        <a class="bh-cta" href="/contact">Tell Us What You're Building</a>
+      </div>
+    </section>
+
+    <!-- ───────────────────────────────────────────────────── SECTION 2 -->
+    <p class="mk-tag">
+      SECTION 2 · block <b>brands-capabilities</b> · follows <b>BlockServicesCards</b>
+      (home) · sky band, navy sliding cards · cards come from a content type, heading is
+      a field
+    </p>
+
+    <section class="bc">
+      <div class="container-custom">
+        <h2 class="bc-title">Capabilities built for scale</h2>
+
+        <div class="bc-carousel">
+          <button type="button" class="bc-arrow bc-arrow--prev" aria-label="Previous">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+
+          <ul class="bc-track" id="bc-track">
+            <li class="bc-card">
+              <h3 class="bc-card-title">Brand Partnerships</h3>
+              <p class="bc-card-desc">
+                Authentic creator-brand alignments that drive real consumer affinity.
+              </p>
+            </li>
+            <li class="bc-card">
+              <h3 class="bc-card-title">Ambassador Programs</h3>
+              <p class="bc-card-desc">
+                Sustainable, long-term creator cohorts built to scale your message.
+              </p>
+            </li>
+            <li class="bc-card">
+              <h3 class="bc-card-title">Live Programming</h3>
+              <p class="bc-card-desc">
+                Studio-led live formats designed for high discovery and conversion.
+              </p>
+            </li>
+            <li class="bc-card">
+              <h3 class="bc-card-title">Performance Reporting</h3>
+              <p class="bc-card-desc">
+                Clear dashboards and honest numbers, delivered on a fixed rhythm.
+              </p>
+            </li>
+            <li class="bc-card">
+              <h3 class="bc-card-title">Always-On Content</h3>
+              <p class="bc-card-desc">
+                A steady publishing engine so your brand never goes quiet.
+              </p>
+            </li>
+          </ul>
+
+          <button type="button" class="bc-arrow bc-arrow--next" aria-label="Next">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────────────────────────────────── SECTION 3 -->
+    <p class="mk-tag">
+      SECTION 3 · block <b>brands-outcomes</b> · follows <b>BlockShieldStats</b>
+      (ping-shield) · opens on the real PING kicker (34px bold Title Case, like "3-Year
+      Track Record") · the 90px display number PING uses everywhere · last row accents
+      orange · three fixed rows typed into the page (a kv_list field)
+    </p>
+
+    <section class="bo">
+      <!-- The about-intro swoosh, reused. -->
+      <!-- Soft crescent — matches BlockBrandsOutcomes.vue. -->
+      <svg
+        class="bo-swoosh"
+        viewBox="0 0 400 460"
+        preserveAspectRatio="xMidYMid meet"
+        aria-hidden="true"
+      >
+        <path d="M159.2 -88.9A376 376 0 0 1 159.2 548.9L110.5 470.8A284 284 0 0 0 110.5 -10.8Z" fill="#92DEFF" />
+      </svg>
+
+      <div class="container-custom bo-inner">
+        <h2 class="bo-kicker">Why Brands Choose PING</h2>
+        <p class="bo-subtitle">
+          Three things every programme we run is built to hold on to, from the
+          first brief to the last report.
+        </p>
+
+        <ul class="bo-list">
+          <li class="bo-row">
+            <span class="bo-num">01</span>
+            <div>
+              <h3 class="bo-row-title">Structured scale</h3>
+              <p class="bo-row-desc">
+                We execute large, multi-city creator programs without operational
+                chaos — maintaining control across talent, timelines, and
+                deliverables.
+              </p>
+            </div>
+          </li>
+          <li class="bo-row">
+            <span class="bo-num">02</span>
+            <div>
+              <h3 class="bo-row-title">Execution that delivers</h3>
+              <p class="bo-row-desc">
+                Structured workflows, clear ownership, and disciplined operations
+                ensure campaigns stay on track and within scope.
+              </p>
+            </div>
+          </li>
+          <li class="bo-row bo-row--accent">
+            <span class="bo-num">03</span>
+            <div>
+              <h3 class="bo-row-title">Long-term partnership thinking</h3>
+              <p class="bo-row-desc">
+                We don't optimise for one campaign — we build programs that
+                strengthen brand presence over time.
+              </p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────────────────────────────────── SECTION 4 -->
+    <p class="mk-tag">
+      SECTION 4 · block <b>brands-work</b> · follows <b>BlockKnowledgeCards</b>
+      (knowledge) · borderless cards: rounded thumbnail + bold title ·
+      <b>THIS ONE READS THE NEW `brands` CPT</b> — image = <b>hero_image_key</b>,
+      heading = the post title, text = <b>excerpt</b>
+    </p>
+
+    <section class="bw">
+      <div class="container-custom">
+        <h2 class="bw-title">Execution That Holds</h2>
+        <p class="bw-sub">
+          A snapshot of programs and publishing we've built and run — shared with
+          NDAs in mind.
+        </p>
+
+        <ul class="bw-grid">
+          <li class="bw-card">
+            <div class="bw-thumb">
+              <div class="bw-ph" style="background: #0f2d96"></div>
+            </div>
+            <h3 class="bw-card-title">Kabita's Kitchen Mix</h3>
+            <p class="bw-card-excerpt">
+              A creator-owned spice range taken from idea to shelf — packaging,
+              launch films, and a full commerce push.
+            </p>
+          </li>
+
+          <li class="bw-card">
+            <div class="bw-thumb">
+              <div class="bw-ph" style="background: #4295f8"></div>
+            </div>
+            <h3 class="bw-card-title">Event Swag &amp; Merchandise Management</h3>
+            <p class="bw-card-excerpt">
+              End-to-end event swag and merchandise management — from sourcing and
+              quality checks to on-ground distribution.
+            </p>
+          </li>
+
+          <li class="bw-card">
+            <div class="bw-thumb">
+              <div class="bw-ph" style="background: #4295f8"></div>
+            </div>
+            <h3 class="bw-card-title">Multi-City Creator Tour</h3>
+            <p class="bw-card-excerpt">
+              Forty creators, six cities, one release window — planned, filmed, and
+              published on a single shared calendar.
+            </p>
+          </li>
+
+          <li class="bw-card">
+            <div class="bw-thumb">
+              <div class="bw-ph" style="background: #0f2d96"></div>
+            </div>
+            <h3 class="bw-card-title">Always-On Brand Channel</h3>
+            <p class="bw-card-excerpt">
+              A weekly publishing engine run by the studio, with reporting the brand
+              team can take straight into a review.
+            </p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────────────────────────────────── SECTION 5 -->
+    <p class="mk-tag">
+      SECTION 5 · block <b>brands-cta</b> · follows <b>BlockShieldCta</b> + the inset
+      panel from <b>BlockShieldModel</b> · your black panel, in PING navy · fields:
+      heading, subtext, cta_label, cta_url, cta2_label, cta2_url ·
+      <b>the outlined button is NEW</b> — PING has only the orange pill today
+    </p>
+
+    <section class="bt">
+      <div class="container-custom">
+        <div class="bt-panel">
+          <h2 class="bt-heading">Want to run a creator program at scale?</h2>
+          <p class="bt-subtext">Let's build something that lasts.</p>
+          <div class="bt-actions">
+            <a class="bt-btn" href="/contact">Contact Us</a>
+            <a class="bt-btn bt-btn--ghost" href="/services">See Platforms</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      // Mock-only behaviour so the carousel is clickable while you review. The
+      // real block uses this same native scroll + scroll-snap approach.
+      var track = document.getElementById('bc-track');
+      function step() {
+        var first = track.firstElementChild;
+        var gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+        return first ? first.offsetWidth + gap : track.clientWidth;
+      }
+      function slide(dir) {
+        var atEnd =
+          Math.ceil(track.scrollLeft + track.clientWidth) >= track.scrollWidth - 1;
+        var atStart = track.scrollLeft <= 1;
+        if (dir === 1 && atEnd) return track.scrollTo({ left: 0, behavior: 'smooth' });
+        if (dir === -1 && atStart)
+          return track.scrollTo({ left: track.scrollWidth, behavior: 'smooth' });
+        track.scrollBy({ left: step() * dir, behavior: 'smooth' });
+      }
+      document.querySelector('.bc-arrow--prev').addEventListener('click', function () {
+        slide(-1);
+      });
+      document.querySelector('.bc-arrow--next').addEventListener('click', function () {
+        slide(1);
+      });
+
+      var btn = document.getElementById('mk-toggle');
+      btn.addEventListener('click', function () {
+        var clean = document.body.classList.toggle('mk-clean');
+        btn.textContent = clean ? 'Show labels' : 'Hide labels';
+      });
+    </script>
+  </body>
+</html>

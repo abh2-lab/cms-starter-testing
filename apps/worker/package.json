@@ -1,0 +1,40 @@
+{
+  "name": "@cms/worker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "BullMQ worker — async jobs (search indexing, webhooks, scheduled publish, image variants, email)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx watch --env-file=../../.env src/index.ts",
+    "start": "node --env-file=../../.env dist/index.js",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "clean": "rimraf dist .turbo"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1050.0",
+    "@cms/config": "workspace:*",
+    "@cms/db": "workspace:*",
+    "@cms/email": "workspace:*",
+    "@cms/queue": "workspace:*",
+    "@cms/search": "workspace:*",
+    "@cms/types": "workspace:*",
+    "@sentry/node": "^7.120.4",
+    "bullmq": "^5.34.0",
+    "drizzle-orm": "^0.45.2",
+    "ioredis": "^5.10.1",
+    "pino": "^9.5.0",
+    "sharp": "^0.34.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.2",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.6"
+  }
+}

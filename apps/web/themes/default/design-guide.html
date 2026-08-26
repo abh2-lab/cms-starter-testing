@@ -1,0 +1,1261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PING theme — design guide</title>
+
+    <!-- Figtree: the same link nuxt.config.ts injects. Absolute URL, so it works
+         over file:// too. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap"
+    />
+
+    <!-- THE REAL STYLESHEET. This page documents theme.css by *rendering* it, not by
+         copying it. Every swatch, specimen and number below is read live from these
+         tokens, so this guide cannot fall out of date. If you change theme.css, reload
+         this page and it will already be correct. -->
+    <link rel="stylesheet" href="./app/assets/css/theme.css" />
+
+    <style>
+      /* ── Guide chrome only ────────────────────────────────────────────────────
+         Everything here is prefixed .dg- and exists purely to lay out this page.
+         It NEVER declares a design token — it only consumes them. Nothing in this
+         file is shipped: the page sits at the theme-layer root (not app/, not
+         public/), so Nuxt neither builds nor serves it. Open it from disk.        */
+
+      body {
+        background: #ffffff;
+      }
+      .dg-wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 24px 120px;
+      }
+      .dg-mast {
+        border-bottom: 3px solid var(--brand-blue);
+        padding: 48px 0 24px;
+        margin-bottom: 40px;
+      }
+      .dg-mast h1 {
+        font-size: var(--fs-h1);
+        font-weight: var(--fw-bold);
+        line-height: var(--lh-tight);
+        color: var(--brand-blue);
+      }
+      .dg-mast p {
+        max-width: 70ch;
+        margin-top: 12px;
+        color: var(--muted);
+      }
+      .dg-live {
+        display: inline-block;
+        margin-top: 16px;
+        background: #eaf7ee;
+        border: 1px solid #9ad3ab;
+        color: #0a7d3c;
+        font-size: var(--fs-sm);
+        font-weight: var(--fw-semibold);
+        border-radius: 999px;
+        padding: 6px 14px;
+      }
+      .dg-toc {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 56px;
+      }
+      .dg-toc a {
+        font-size: var(--fs-sm);
+        font-weight: var(--fw-semibold);
+        text-decoration: none;
+        color: var(--brand-blue);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 6px 14px;
+      }
+      .dg-toc a:hover {
+        background: var(--brand-blue);
+        color: #fff;
+      }
+      .dg-sec {
+        margin: 0 0 72px;
+        scroll-margin-top: 24px;
+      }
+      .dg-sec > h2 {
+        font-size: var(--fs-h3);
+        font-weight: var(--fw-bold);
+        color: var(--brand-blue);
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 10px;
+        margin-bottom: 8px;
+      }
+      .dg-sec > .dg-lede {
+        color: var(--muted);
+        max-width: 78ch;
+        margin-bottom: 24px;
+      }
+      h3.dg-h {
+        font-size: var(--fs-h4);
+        font-weight: var(--fw-bold);
+        color: var(--brand-blue);
+        margin: 32px 0 12px;
+      }
+      .dg-wrap p,
+      .dg-wrap li {
+        font-size: var(--fs-sm);
+        line-height: 1.6;
+      }
+      table.dg {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--fs-sm);
+        margin: 12px 0 8px;
+      }
+      table.dg th,
+      table.dg td {
+        text-align: left;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      table.dg th {
+        font-weight: var(--fw-bold);
+        color: var(--brand-blue);
+        border-bottom: 2px solid var(--brand-blue);
+        white-space: nowrap;
+      }
+      table.dg tr:hover td {
+        background: #f7fafd;
+      }
+      code,
+      .dg-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.92em;
+        background: #eef3fb;
+        border-radius: 4px;
+        padding: 1px 5px;
+        color: #123;
+      }
+      pre.dg-code {
+        background: #0f2d96;
+        color: #dbe7ff;
+        border-radius: 10px;
+        padding: 18px 20px;
+        overflow-x: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.65;
+        margin: 12px 0;
+      }
+      pre.dg-code code {
+        background: none;
+        color: inherit;
+        padding: 0;
+        font-size: inherit;
+      }
+      .dg-val {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-weight: var(--fw-bold);
+        color: #0a7d3c;
+      }
+      /* Callouts */
+      .dg-note,
+      .dg-warn,
+      .dg-stop {
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin: 16px 0;
+        border-left: 5px solid;
+      }
+      .dg-note {
+        background: #eef3fb;
+        border-color: var(--brand-blue);
+      }
+      .dg-warn {
+        background: #fff5f2;
+        border-color: var(--accent);
+      }
+      .dg-stop {
+        background: #fdecea;
+        border-color: #b91c1c;
+      }
+      .dg-note strong,
+      .dg-warn strong,
+      .dg-stop strong {
+        font-weight: var(--fw-bold);
+      }
+      /* Swatches */
+      .dg-swatches {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 14px;
+        margin: 14px 0;
+      }
+      .dg-sw {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .dg-sw-chip {
+        height: 74px;
+      }
+      .dg-sw-meta {
+        padding: 9px 11px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .dg-sw-meta b {
+        display: block;
+        font-weight: var(--fw-bold);
+        color: var(--brand-blue);
+      }
+      .dg-sw-meta span {
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      /* Type specimens */
+      .dg-spec {
+        border-bottom: 1px solid var(--border);
+        padding: 14px 0;
+        display: grid;
+        grid-template-columns: 190px 1fr;
+        gap: 20px;
+        align-items: baseline;
+      }
+      .dg-spec-key {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .dg-spec-key b {
+        display: block;
+        color: var(--brand-blue);
+        font-size: 13px;
+      }
+      .dg-spec-demo {
+        color: var(--brand-blue);
+        overflow: hidden;
+      }
+      .dg-demo-area {
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+        padding: 24px;
+        margin: 12px 0;
+        background: #fff;
+      }
+      .dg-demo-area.on-navy {
+        background: var(--brand-blue);
+        border-color: var(--brand-blue);
+      }
+      .dg-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        align-items: center;
+      }
+      .dg-legacy {
+        opacity: 0.75;
+        filter: grayscale(0.15);
+      }
+      @media (max-width: 768px) {
+        .dg-spec {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="dg-wrap">
+      <header class="dg-mast">
+        <h1>PING theme — design guide</h1>
+        <p>
+          The reference for building new PING pages and sections. This page
+          <strong>links the real <code>app/assets/css/theme.css</code></strong> rather
+          than copying it, so every swatch, specimen and number below is whatever the
+          theme actually says right now. It cannot go stale.
+        </p>
+        <span class="dg-live" id="dg-live-badge">checking live link to theme.css…</span>
+      </header>
+
+      <nav class="dg-toc">
+        <a href="#which">1 · Which system am I in?</a>
+        <a href="#tokens">2 · Tokens</a>
+        <a href="#type">3 · Type scale</a>
+        <a href="#recipes">4 · Derived recipes</a>
+        <a href="#colour">5 · Colour</a>
+        <a href="#components">6 · Components</a>
+        <a href="#newblock">7 · Build a new block</a>
+        <a href="#rules">8 · Rules &amp; gotchas</a>
+        <a href="#issues">9 · Known issues</a>
+      </nav>
+
+      <!-- ─────────────────────────────────────────────────────────── 1 -->
+      <section class="dg-sec" id="which">
+        <h2>1 · Which system am I in?</h2>
+        <p class="dg-lede">
+          Read this before touching anything. This theme contains
+          <strong>two disjoint design systems</strong>. Only one of them is PING.
+        </p>
+
+        <div class="dg-stop">
+          <strong>The trap.</strong> <code>#d34135</code> (50 uses) and
+          <code>#121212</code> (36 uses) are the 3rd and 4th most common colours in this
+          theme — and <em>neither belongs to PING</em>. They are the leftover “Decode”
+          editorial skin. If you open a random block for reference you have a good chance
+          of copying the wrong palette, a hard-coded <code>1440px</code> container, and a
+          pile of literal font sizes.
+        </div>
+
+        <table class="dg">
+          <thead>
+            <tr>
+              <th></th>
+              <th>PING marketing — the system</th>
+              <th>“Decode” editorial — legacy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Palette</b></td>
+              <td>
+                <code>#0f2d96</code> <code>#4295f8</code> <code>#92deff</code>
+                <code>#ff6a4d</code>
+              </td>
+              <td>
+                <code>#d34135</code> <code>#121212</code> <code>#faf9f2</code>
+                <code>#e5e4da</code>
+              </td>
+            </tr>
+            <tr>
+              <td><b>Container</b></td>
+              <td><code>.container-custom</code> → <code>--container</code> (1200px)</td>
+              <td>hard-coded <code>max-width: 1440px</code> — 14 files</td>
+            </tr>
+            <tr>
+              <td><b>font-size literals</b></td>
+              <td><b style="color: #0a7d3c">0</b> — fully tokenised</td>
+              <td><b style="color: #b91c1c">175</b> across 26 files</td>
+            </tr>
+            <tr>
+              <td><b>Blocks</b></td>
+              <td>
+                <code>BlockShield*</code>, <code>BlockAbout*</code>,
+                <code>BlockKnowledge*</code>, <code>BlockMarketingHero</code>,
+                <code>BlockTeamGrid</code>, <code>BlockServicesCards</code>,
+                <code>BlockImpactStats</code>, <code>BlockStudioGallery</code>,
+                <code>BlockBrandLogoStrip</code>, <code>BlockCollectionSearch</code>,
+                <code>BlockContactForm</code>, <code>BlockSiteNav</code>,
+                <code>BlockFooter*</code>, <code>layouts/default.vue</code>
+              </td>
+              <td class="dg-legacy">
+                <code>BlockArchive*</code>, <code>BlockAuthor*</code>,
+                <code>BlockEditor*</code>, <code>BlockEvents*</code>,
+                <code>BlockHeroFeatured</code>, <code>BlockFeatureStories</code>,
+                <code>BlockPost*</code>, <code>BlockSearch*</code>,
+                <code>BlockNewsletterCta</code>, <code>BlockCategoryStrip</code>,
+                <code>BlockPastEvents</code>, <code>BlockDispatchBox</code>
+              </td>
+            </tr>
+            <tr>
+              <td><b>Pages</b></td>
+              <td><code>/</code> <code>/about</code> <code>/ping-shield</code>
+                <code>/knowledge</code> <code>/contact</code></td>
+              <td class="dg-legacy">
+                <code>/stories</code> <code>/article/*</code> <code>/authors</code>
+                <code>/search</code>, archives
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="dg-note">
+          <strong>Rule:</strong> copy your reference from the PING column, never the
+          legacy one. If a page you are asked to build is one of the five PING pages,
+          everything in this guide applies. The legacy blocks are out of scope — leave
+          them alone unless explicitly asked.
+        </div>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────── 2 -->
+      <section class="dg-sec" id="tokens">
+        <h2>2 · Tokens</h2>
+        <p class="dg-lede">
+          <code>app/assets/css/theme.css</code> is the single source of truth. Values in
+          the <span class="dg-val">green</span> column are read from the live stylesheet
+          by this page at load — they are not typed in.
+        </p>
+
+        <h3 class="dg-h">Layout</h3>
+        <table class="dg" id="tbl-layout"></table>
+
+        <h3 class="dg-h">Type scale</h3>
+        <table class="dg" id="tbl-type"></table>
+
+        <h3 class="dg-h">Line height</h3>
+        <table class="dg" id="tbl-lh"></table>
+
+        <h3 class="dg-h">Weight</h3>
+        <table class="dg" id="tbl-fw"></table>
+
+        <h3 class="dg-h">Spacing</h3>
+        <table class="dg" id="tbl-space"></table>
+
+        <h3 class="dg-h">Colour, radius, motion</h3>
+        <table class="dg" id="tbl-misc"></table>
+
+        <h3 class="dg-h">Mobile (≤768px)</h3>
+        <p>
+          <strong>One</strong> breakpoint rewrites the scale, in <code>:root</code>. Blocks
+          must <em>not</em> restate heading sizes in their own media queries — that is
+          already handled here.
+        </p>
+        <table class="dg">
+          <thead>
+            <tr><th>Token</th><th>Desktop</th><th>≤768px</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>--fs-display</code></td><td>74px</td><td>32px</td></tr>
+            <tr><td><code>--fs-h1</code></td><td>50px</td><td>34px</td></tr>
+            <tr><td><code>--fs-h2</code></td><td>38px</td><td>28px</td></tr>
+            <tr><td><code>--fs-h3</code></td><td>30px</td><td>22px</td></tr>
+            <tr><td><code>--fs-h4</code></td><td>22px</td><td>20px</td></tr>
+            <tr><td><code>--fs-lead</code></td><td>20px</td><td>19px</td></tr>
+            <tr><td><code>--fs-body</code></td><td>18px</td><td>17px</td></tr>
+            <tr><td><code>--section-y</code></td><td>80px</td><td>48px</td></tr>
+            <tr><td><code>--header-h</code></td><td>100px</td><td>68px</td></tr>
+          </tbody>
+        </table>
+        <div class="dg-note">
+          <strong><code>--fs-display</code> is never used on its own.</strong> All six
+          consumers write <code>calc(var(--fs-display) + 16px)</code>, so the token always
+          reads <em>14px smaller</em> than what lands on screen: 74 → 90px on desktop,
+          32 → 48px on a phone. Read the token and you will mis-size the stat.
+        </div>
+        <div class="dg-note">
+          <strong>Not shrunk on mobile:</strong> <code>--fs-sm</code>,
+          <code>--fs-xs</code> and <code>--gutter</code>. <code>--fs-sm</code> in
+          particular <em>must</em> stay 16px — every orange pill on the site is
+          <code>calc(var(--fs-sm) + 1px)</code>, the header CTA included.
+        </div>
+        <div class="dg-note">
+          <strong>The phone scale is the one that matters.</strong> Most PING visitors are
+          on a phone, so these values are set against how a native app reads — they are
+          not the desktop scale shrunk proportionally. Two knock-on effects to remember
+          when you change <code>--fs-h2</code> or <code>--fs-h3</code>: the section kicker
+          is <code>calc(var(--fs-h2) - 4px)</code> and the stat label is
+          <code>calc(var(--fs-h3) - 2px)</code>, so each token moves two things.
+        </div>
+
+        <h3 class="dg-h">Font</h3>
+        <p>
+          <strong>Figtree</strong> is the only web font loaded, as a variable font
+          (weights 300–900, roman + italic) from Google Fonts, via
+          <code>app.head.link</code> in <code>themes/default/nuxt.config.ts</code>. The
+          family is hard-coded in theme.css’s <code>body</code> rule — there is
+          <em>no</em> <code>--font-*</code> token, so a font swap means editing two files.
+        </p>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────── 3 -->
+      <section class="dg-sec" id="type">
+        <h2>3 · Type scale</h2>
+        <p class="dg-lede">
+          Nine steps. <strong>Pick by role, not by eye.</strong> A literal
+          <code>font-size</code> in a block is a bug. Every specimen below is rendered at
+          the live token value.
+        </p>
+        <div id="specimens"></div>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────── 4 -->
+      <section class="dg-sec" id="recipes">
+        <h2>4 · The four derived recipes</h2>
+        <p class="dg-lede">
+          These four sizes are <strong>not tokens</strong> — they are
+          <code>calc()</code> expressions repeated across blocks. They encode real design
+          decisions, so use the expression (not the resolved number): if the scale moves,
+          the relationship survives. Resolved values below are measured live.
+        </p>
+        <table class="dg" id="tbl-recipes"></table>
+        <div class="dg-note">
+          <strong>Why expressions, not numbers.</strong> “The pill label is one step
+          bigger than the nav” stays true when the scale changes. “17px” does not.
+        </div>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────── 5 -->
+      <section class="dg-sec" id="colour">
+        <h2>5 · Colour</h2>
+        <p class="dg-lede">
+          The PING palette. Swatches marked <em>token</em> are painted with
+          <code>var(--…)</code>; the rest are hex literals used directly by blocks.
+        </p>
+
+        <div class="dg-warn">
+          <strong>The colour tokens are effectively dead.</strong> Across 64 block files
+          there are only <b>17</b> <code>var()</code> colour references — and
+          <b>zero</b> to <code>--brand-blue</code>, <code>--brand-blue-light</code>,
+          <code>--brand-navy</code> or <code>--text</code>. Blocks hard-code the hex.
+          Contrast that with the non-colour tokens, which are genuinely adopted
+          (<code>--space-*</code> ×232, <code>--fs-*</code> ×98). So: follow the existing
+          convention and write the hex for colours, but never invent a new one — pick from
+          this palette.
+        </div>
+
+        <h3 class="dg-h">PING palette — use these</h3>
+        <div class="dg-swatches" id="sw-ping"></div>
+
+        <h3 class="dg-h">Legacy “Decode” palette — do not use</h3>
+        <p>Listed only so you can <em>recognise</em> it and stay out of it.</p>
+        <div class="dg-swatches dg-legacy" id="sw-legacy"></div>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────── 6 -->
+      <section class="dg-sec" id="components">
+        <h2>6 · Components</h2>
+        <p class="dg-lede">
+          Live examples — rendered with the same recipes the real blocks use, so what you
+          see here is what ships.
+        </p>
+
+        <h3 class="dg-h">The container</h3>
+        <p>
+          One global class, <code>.container-custom</code>, defined
+          <strong>only</strong> in theme.css. Content caps at <code>--container</code> and
+          gutters at <code>--gutter</code> below that.
+        </p>
+        <pre class="dg-code"><code>.container-custom {
+  width: min(100% - (var(--gutter) * 2), var(--container));
+  margin-inline: auto;
+}</code></pre>
+        <div class="dg-stop">
+          <strong>Never re-declare this in a block’s scoped style.</strong>
+          <code>&lt;style scoped&gt;</code> cannot be shared, so every block that redeclared
+          it got its own private copy — 19 of them, disagreeing on 40px vs 64px gutters.
+          That is why the header never lined up with the page content. Put the class in
+          the markup; keep only your own layout (grid/gap) in the scoped style.
+        </div>
+
+        <h3 class="dg-h">Full-bleed band</h3>
+        <p>
+          The <code>&lt;section&gt;</code> owns the background and the vertical rhythm and
+          spans the viewport; an inner wrapper carries <code>.container-custom</code>.
+          43 sites across 35 files use this — it is <em>the</em> layout idiom.
+        </p>
+        <pre class="dg-code"><code>&lt;section class="xx"&gt;
+  &lt;div class="container-custom xx-inner"&gt;…&lt;/div&gt;
+&lt;/section&gt;
+
+.xx { background: #0f2d96; padding: var(--section-y) 0; }
+.xx-inner { display: grid; gap: var(--space-9); }   /* layout only — no width! */</code></pre>
+
+        <h3 class="dg-h">Pill buttons</h3>
+        <div class="dg-demo-area">
+          <div class="dg-row">
+            <a href="#components" class="dg-pill dg-pill-orange" id="demo-pill-o">Orange pill</a>
+            <a href="#components" class="dg-pill dg-pill-blue" id="demo-pill-b">Blue pill</a>
+          </div>
+        </div>
+        <table class="dg">
+          <thead><tr><th>Property</th><th>Orange</th><th>Blue</th></tr></thead>
+          <tbody>
+            <tr><td>background</td><td><code>#ff6a4d</code></td><td><code>#92deff</code></td></tr>
+            <tr><td>hover</td><td><code>#e0532f</code></td><td><code>#7fd3fa</code></td></tr>
+            <tr><td>colour</td><td colspan="2"><code>#fff</code></td></tr>
+            <tr><td>radius</td><td colspan="2"><code>999px</code></td></tr>
+            <tr><td>font-size</td><td colspan="2"><code>calc(var(--fs-sm) + 1px)</code> — the header nav + 1px</td></tr>
+            <tr><td>vertical padding</td><td colspan="2"><code>calc(var(--space-3) - 1px)</code> → 11px</td></tr>
+            <tr><td>horizontal padding</td><td colspan="2"><code>calc(var(--space-N) + 4px)</code> — N varies by context (52 / 44 / 36 / 28px)</td></tr>
+          </tbody>
+        </table>
+        <pre class="dg-code"><code>.xx-cta {
+  display: inline-flex;
+  align-items: center;
+  background: #ff6a4d;
+  color: #fff;
+  border-radius: 999px;
+  font-size: calc(var(--fs-sm) + 1px);            /* 17px — nav + 1 */
+  font-weight: var(--fw-semibold);
+  padding: calc(var(--space-3) - 1px) calc(var(--space-8) + 4px);   /* 11px 52px */
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.xx-cta:hover { background: #e0532f; }</code></pre>
+        <div class="dg-note">
+          <strong>Horizontal padding is the intentional variable</strong> — the
+          <code>+4px</code> and <code>-1px</code> are not. Keep those.
+        </div>
+
+        <h3 class="dg-h">The circled-plus motif</h3>
+        <p>
+          A navy ring with the plus drawn as two bars — used by
+          <code>.hw-plus</code>, <code>.sc-plus</code>, <code>.fq-icon</code> (which
+          rotates 45° into a cross when open) and <code>.tg-plus</code> (a 34px scale-down).
+          Reuse it; don’t invent another.
+        </p>
+        <div class="dg-demo-area">
+          <div class="dg-row">
+            <span class="dg-plus" aria-hidden="true"></span>
+            <span class="dg-plus dg-plus-open" aria-hidden="true"></span>
+            <span class="dg-plus dg-plus-sm" aria-hidden="true"></span>
+          </div>
+        </div>
+        <pre class="dg-code"><code>.plus {
+  position: relative;
+  width: 42px; height: 42px;
+  border: 2px solid #0f2d96;
+  border-radius: 50%;
+}
+.plus::before, .plus::after { content: ''; position: absolute; background: #0f2d96; }
+.plus::before { top: 50%; left: 11px; right: 11px; height: 2px; transform: translateY(-50%); }
+.plus::after  { left: 50%; top: 11px; bottom: 11px; width: 2px; transform: translateX(-50%); }
+/* open state: */ .plus--open { transform: rotate(45deg); }
+
+/* For a different diameter D: inset ≈ round(D × 0.26). Border and bars stay 2px. */</code></pre>
+
+        <h3 class="dg-h">Split section</h3>
+        <p>
+          White on the left, colour on the right, via a hard gradient stop. Used by
+          <code>BlockShieldHow</code>, <code>BlockShieldCost</code> and (reversed)
+          <code>BlockKnowledgeHero</code>. The columns own their padding — the section has
+          no <code>--section-y</code>.
+        </p>
+        <pre class="dg-code"><code>.xx { background: linear-gradient(to right, #ffffff 0 50%, #92deff 50% 100%); overflow: hidden; }
+.xx-inner { display: grid; grid-template-columns: 1fr 1fr; min-height: 540px; }
+.xx-left  { padding: var(--space-9) var(--space-8) var(--space-9) 0; }
+
+@media (max-width: 768px) {           /* gradient collapses to a solid */
+  .xx { background: #92deff; }
+  .xx-inner { grid-template-columns: 1fr; min-height: 0; }
+  .xx-left { background: #fff; margin: 0 calc(var(--gutter) * -1); padding: var(--space-8) var(--gutter); }
+}</code></pre>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────── 7 -->
+      <section class="dg-sec" id="newblock">
+        <h2>7 · Build a new block</h2>
+        <p class="dg-lede">
+          The skeleton. Generate the pair with <code>pnpm gen:block</code> (it wires both
+          registries), then fill in this shape.
+        </p>
+        <pre class="dg-code"><code>&lt;template&gt;
+  &lt;section class="xx"&gt;
+    &lt;div class="container-custom xx-inner"&gt;
+      &lt;p  class="xx-eyebrow"&gt;{{ eyebrow }}&lt;/p&gt;
+      &lt;h2 class="xx-title"&gt;{{ title }}&lt;/h2&gt;
+      &lt;p  class="xx-body"&gt;{{ body }}&lt;/p&gt;
+      &lt;NuxtLink :to="ctaUrl" class="xx-cta"&gt;{{ ctaLabel }}&lt;/NuxtLink&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/template&gt;
+
+&lt;style scoped&gt;
+.xx        { background: #ffffff; padding: var(--section-y) 0; }  /* never a width here */
+.xx-inner  { display: grid; gap: var(--space-9); }               /* layout only */
+
+.xx-eyebrow { font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+              text-transform: uppercase; letter-spacing: 0.04em;
+              margin: 0 0 var(--space-3); }
+.xx-title   { font-size: var(--fs-h2); font-weight: var(--fw-bold);
+              line-height: var(--lh-tight); margin: 0 0 var(--space-5); }
+.xx-body    { font-size: var(--fs-body); line-height: var(--lh-body);
+              margin: 0 0 var(--space-6); }
+
+/* stat pair */
+.xx-stat       { font-size: calc(var(--fs-display) + 16px); font-weight: var(--fw-bold); line-height: 1; }
+.xx-stat-label { font-size: calc(var(--fs-h3) - 2px); line-height: var(--lh-snug); }
+
+.xx-cta { display: inline-flex; align-items: center;
+          background: #ff6a4d; color: #fff; border-radius: 999px;
+          font-size: calc(var(--fs-sm) + 1px); font-weight: var(--fw-semibold);
+          padding: calc(var(--space-3) - 1px) calc(var(--space-8) + 4px);
+          text-decoration: none; transition: background 0.2s; }
+.xx-cta:hover { background: #e0532f; }
+
+@media (max-width: 768px) {          /* layout only — the scale shrinks itself */
+  .xx-inner { grid-template-columns: 1fr; }
+}
+&lt;/style&gt;</code></pre>
+        <div class="dg-note">
+          <strong>Two eyebrow flavours.</strong> An <em>uppercase micro-eyebrow</em>
+          (<code>--fs-xs</code>, letter-spaced) as above — or, on the shield page, a
+          <em>sentence-case section kicker</em> at <code>calc(var(--fs-h2) - 4px)</code>.
+          Don’t mix them up: “How it works” is a kicker, “WHO WE ARE” is an eyebrow.
+        </div>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────── 8 -->
+      <section class="dg-sec" id="rules">
+        <h2>8 · Rules &amp; gotchas</h2>
+        <p class="dg-lede">
+          Each of these cost real debugging time. The symptom is listed because that is
+          how you will meet it again.
+        </p>
+
+        <h3 class="dg-h">Hard rules</h3>
+        <ul>
+          <li><strong>A literal <code>font-size</code> in a block is a bug.</strong> Use a role token. The PING block set currently has zero — keep it that way.</li>
+          <li><strong>Never re-declare <code>.container-custom</code></strong> in a scoped style. <em>Symptom:</em> the header stops lining up with the content.</li>
+          <li><strong>Breakpoints are 768px and 1024px.</strong> Nothing else. (We had 12, including <em>both</em> 767 and 768, and <em>both</em> 992 and 991.98.)</li>
+          <li>
+            <strong>One exception: the header collapses at 1200px</strong>
+            (<code>BlockSiteNav</code>, <code>@media (max-width: 1199px)</code>). Six nav
+            links + Subscribe + the orange pill + the wordmark need ~1066px of row, and
+            <code>.container-custom</code> does not hand that much back until the viewport
+            is ~1130px. At 1024 the desktop header still <em>rendered</em> — it just
+            squashed the logo to 77px to do it, because the global
+            <code>img { max-width: 100% }</code> lets an image shrink to nothing inside a
+            <code>1fr</code> grid track. Do not copy this breakpoint into a block; it is
+            about the header's own contents, not about the page.
+          </li>
+          <li><strong>Don’t restate heading sizes in a block media query</strong> — <code>:root</code> already shrinks the scale at 768px.</li>
+          <li><strong>Never <code>prettier --write</code></strong> — ESLint is the only formatter here.</li>
+        </ul>
+
+        <h3 class="dg-h">Motion</h3>
+        <p>
+          Pick a duration by <em>role</em>, exactly like a <code>--fs-*</code>. A literal
+          duration or easing curve inside a block is a bug. There is one easing curve,
+          <code>--ease-out</code>, and one kill switch — the
+          <code>prefers-reduced-motion</code> block at the bottom of
+          <code>theme.css</code>, which zeroes every animation and transition site-wide.
+          Nothing on this site loops forever.
+        </p>
+        <ul>
+          <li>
+            <strong>A coloured band never fades — only what is inside it moves.</strong>
+            Put the reveal on the inner container (<code>.mh-inner</code>,
+            <code>.wg-grid</code>), never on the <code>&lt;section&gt;</code> that carries
+            the background. <em>Symptom if you get this wrong:</em> the band flickers and
+            the page height jumps as it fades.
+          </li>
+          <li>
+            <strong>Above the fold = CSS. Below the fold = <code>v-reveal</code>.</strong>
+            A hero animates with a plain <code>animation</code> that runs at first paint.
+            Never <code>v-reveal</code> a hero — if hydration is slow the copy flashes
+            visible → hidden → in again.
+          </li>
+          <li>
+            <strong>The hidden state is never in the SSR HTML.</strong>
+            <code>v-reveal</code> (<code>app/plugins/reveal.ts</code>) writes
+            <code>data-reveal</code> at <em>mount</em>, so a visitor with JavaScript off,
+            or a crawler, always gets the finished page. Do not bake
+            <code>opacity: 0</code> into a block's own CSS.
+          </li>
+          <li>
+            <strong>Register directives on the server too.</strong> The plugin is
+            <code>reveal.ts</code>, <em>not</em> <code>reveal.client.ts</code>. Vue's SSR
+            renderer throws <code>Cannot read properties of undefined (reading
+            'getSSRProps')</code> on a directive the server has never seen, which 500s
+            every page that uses it. Only <code>mounted</code> does any work, and
+            <code>mounted</code> never runs during SSR.
+          </li>
+        </ul>
+        <p>
+          The three directive forms, and when each is right:
+        </p>
+        <pre class="dg-code"><code>v-reveal           &lt;!-- this element fades + rises --&gt;
+v-reveal.stagger   &lt;!-- each DIRECT CHILD does, --reveal-stagger apart --&gt;</code></pre>
+        <div class="dg-warn">
+          <strong>Only ever hide with <code>opacity</code>, never with
+          <code>clip-path</code>.</strong> A <code>clip-path</code> shrinks the element's
+          visible area to zero; <code>IntersectionObserver</code> then measures zero
+          intersection and the callback that would un-hide it <em>never fires</em>. The
+          hidden state prevents its own reveal, permanently.
+          <br /><br />
+          <em>Symptom:</em> the art flashes in for a few milliseconds on load (the
+          server-rendered markup, which is unclipped) and then vanishes the instant Vue
+          hydrates and applies the hidden state. Meanwhile ordinary
+          <code>v-reveal</code> content on the same page reveals normally, because it
+          hides with opacity — which is exactly the clue that separates the two.
+          <br /><br />
+          This is why decorative curves are <strong>not</strong> scroll-triggered.
+        </div>
+
+        <h3 class="dg-h">Decorative curves</h3>
+        <div class="dg-warn">
+          <strong>Never put an <code>&lt;svg&gt;</code> in a block for a decorative
+          curve.</strong> Every curve on the site is one component,
+          <code>&lt;ThemeCurve&gt;</code>, drawing a shape from
+          <code>utils/curves.ts</code>. Blocks used to own their own SVG, their own
+          <code>viewBox</code>, their own <code>preserveAspectRatio</code> and their own
+          copy of the keyframes — eleven blocks, eleven sets of numbers — and that is
+          precisely how the theme ended up with the <em>same</em> path rendering 150px
+          thick on <code>/brands</code> and 130px on a portfolio page.
+        </div>
+        <p>
+          <strong>The rule: the box never decides the drawing.</strong> One shared unit
+          does — <code>1 curve unit = min(1, 100vw / 1440) px</code>.
+          <code>useCurveFit</code> measures the element and computes the
+          <code>viewBox</code> <em>backwards</em> from that unit, so the viewBox always
+          carries the element's own aspect ratio and the artwork <b>cannot</b> be
+          squashed. Two things follow:
+        </p>
+        <ul>
+          <li>
+            <b>Nothing is ever stretched.</b> A taller band does not fatten the curve, it
+            just hands it more empty room.
+          </li>
+          <li>
+            <b>A ribbon is the same weight everywhere.</b>
+            <code>--curve-thickness</code> (130) units renders the same number of pixels
+            on every page at a given screen width, by construction.
+          </li>
+        </ul>
+        <p>
+          So how does a curve reach the screen edges? <strong>It gets longer, never
+          bigger.</strong> Above 1440px the unit stops growing, the measured viewBox
+          becomes wider than the artwork, and the engine extends the shape. Two
+          mechanisms, one per family:
+        </p>
+        <ul>
+          <li>
+            <b>Splines</b> — a centre line we draw ourselves and stroke at the shared
+            weight. To lengthen one, its end points are carried outward along their own
+            tangents until they are off the canvas. Stroking is also what keeps a
+            diagonal band exactly as thick when it steepens.
+          </li>
+          <li>
+            <b>Outlines</b> — ribbons exported from the design tool as filled shapes.
+            Their thickness is baked in, so they cannot be re-drawn — but each is cut off
+            <em>flat</em> where it ran past its own art board, and
+            <code>curve-art.ts</code> records those cuts with the slope of the edge either
+            side. Each edge is continued along <em>its own</em> tangent, so the join stays
+            smooth instead of kinking.
+          </li>
+        </ul>
+        <pre class="dg-code"><code>&lt;!-- A full-bleed curve: ThemeCurve fills its parent, so position the PARENT. --&gt;
+&lt;section class="xx"&gt;                       /* position: relative; overflow: hidden */
+  &lt;ThemeCurve shape="converging" reveal="left" /&gt;
+&lt;/section&gt;
+
+&lt;!-- A curve that should only cover part of a band: wrap it. --&gt;
+&lt;div class="xx-curve"&gt;                     /* position: absolute; right: 0; width: 50% */
+  &lt;ThemeCurve shape="shield-tick" reveal="none" /&gt;
+&lt;/div&gt;</code></pre>
+        <p>
+          <b>Never</b> set a width, a height or an <code>aspect-ratio</code> on the curve
+          itself, and never add a per-breakpoint override for one — that is the box
+          deciding the drawing again. If a curve looks wrong at some width, the shape's
+          <code>place</code> in <code>curves.ts</code> is the knob, not CSS.
+        </p>
+
+        <h3 class="dg-h">Animating a curve</h3>
+        <div class="dg-warn">
+          <strong>Do not write the keyframes.</strong> ThemeCurve owns them; pass
+          <code>reveal</code> and pick the direction the ribbon <em>travels</em>
+          (<code>left</code>, <code>right</code>, <code>up</code>, <code>down</code>,
+          <code>fade</code>, <code>none</code>).
+          <br /><br />
+          <strong>Do not put an animation on a shape inside
+          <code>&lt;defs&gt;</code>.</strong> Elements in <code>&lt;defs&gt;</code> are
+          never rendered, and browsers do not advance animations on unrendered elements.
+          <em>Symptom:</em> <code>getAnimations()</code> reports the animation as
+          <code>running</code> but <code>currentTime</code> stays at <code>0</code>
+          forever, and the art simply never appears.
+        </div>
+        <pre class="dg-code"><code>/* What `reveal` expands to, in ThemeCurve — no scroll trigger, no observer.
+   inset(top right bottom left) — each number is how far IN from that edge.
+   Ribbon travels left → right, so clip 100% from the RIGHT and open it. */
+.theme-curve--left { --curve-from: inset(0 100% 0 0); }
+@keyframes theme-curve-draw { from { clip-path: var(--curve-from); } }
+/* `backwards`, not `forwards`: the from-state is held only during the delay,
+   so the END state is the element's own style — no clip. A curve whose
+   animation never runs is therefore VISIBLE, not permanently invisible. */</code></pre>
+        <div class="dg-warn">
+          <strong>The edge you clip FROM is the one the reveal grows AWAY from.</strong>
+          This is the easy one to get backwards — we shipped all four vertical curves
+          inverted first time. Verified by hit-testing a plain 400px box:
+          <br /><br />
+          <code>inset(0 0 50% 0)</code> — bottom inset 50% — leaves the <b>TOP</b> half
+          showing, so <code>inset(0 0 100% 0)</code> → <code>inset(0 0 0 0)</code> is
+          collapsed at the top and opens <b>downward</b>.
+          <br />
+          <code>inset(50% 0 0 0)</code> — top inset 50% — leaves the <b>BOTTOM</b> half
+          showing, so <code>inset(100% 0 0 0)</code> → <code>inset(0 0 0 0)</code> is
+          collapsed at the bottom and opens <b>upward</b>.
+        </div>
+        <p>
+          Direction follows the path, so read the shape before choosing an axis. A ribbon
+          that rises (<code>rising-line</code>) takes <code>reveal="up"</code>; one that
+          descends (<code>crescent</code>) takes <code>reveal="down"</code>. A curve that
+          spans the whole document (<code>page-snake</code>) takes
+          <code>reveal="fade"</code> — a wipe across it would be almost entirely
+          off-screen, so there is no version of "drawing" it a reader can perceive.
+          <br /><br />
+          The small <code>&lt;circle&gt;</code> and <code>&lt;path&gt;</code> icons
+          (<code>.wu-tick</code>, <code>.cg-icon</code>) are <em>not</em> curves. They are
+          real strokes with their own weights and they use the dash trick — with
+          <code>pathLength="1"</code> so the maths is just 1 → 0. Leave them alone.
+        </p>
+
+        <h3 class="dg-h">Layout traps</h3>
+        <ul>
+          <li><strong>A <code>max-width</code> tuned for the old font size.</strong> Bit us four times (“Years of Experience”, “Aggregated…”, the step titles, the stats descriptions). <em>Symptom:</em> text wraps oddly or spills its box after you bump a size. <em>Rule:</em> change a font size → re-check every cap on that element.</li>
+          <li><strong><code>min-width: 0</code> on flex/grid children.</strong> A flex item won’t shrink below its content’s min-width, so the longest label silently widens its column. <em>Symptom:</em> “equal” columns aren’t equal.</li>
+          <li><strong>A gapped grid can’t take <code>60% / 40%</code></strong> — that totals 100% + the gap and overflows. Use <code>fr</code>, and wrap in <code>minmax(0, …)</code> so a long word can’t blow the track out.</li>
+          <li><strong>Percentage heights need a definite parent height.</strong> <code>align-items: flex-end</code> leaves the child’s height as content, so <code>%</code> resolves to nothing. Use <code>stretch</code>.</li>
+          <li><strong><code>container-type</code> goes on the PARENT.</strong> It makes an element a container for its <em>descendants</em> — an element cannot read its own <code>cqw</code>.</li>
+        </ul>
+
+        <h3 class="dg-h">CSS facts that look like bugs</h3>
+        <ul>
+          <li><strong><code>left</code>/<code>top</code> do nothing on a static element.</strong> They need <code>position: relative/absolute</code>.</li>
+          <li><strong>Absolute offsets measure from the padding box.</strong> Adding padding to the parent will <em>not</em> move an absolutely-positioned child — change its <code>top</code>.</li>
+          <li><strong>Form controls don’t inherit the page font.</strong> theme.css opts them in globally, but only <code>font-family</code> — set <code>font-size</code> yourself or you get 13.33px.</li>
+          <li><strong>Transforms don’t apply to inline elements.</strong> (Flex/grid children are blockified, so they’re fine.)</li>
+        </ul>
+
+        <h3 class="dg-h">Content vs CSS — the workflow difference</h3>
+        <div class="dg-warn">
+          <strong>CSS changes hot-reload.</strong> Edit a <code>.vue</code> style and just
+          look at the page.<br /><br />
+          <strong>Content changes do not.</strong> Copy lives in
+          <code>apps/api/fixtures/ping/pages.json</code>. After editing it you must
+          <em>reseed</em> — and the seeder does <b>not</b> invalidate the cache, so you
+          must also flush it or the page serves the old copy for up to 5 minutes:
+          <pre class="dg-code" style="margin-top: 10px"><code>pnpm --filter @cms/api seed:fixtures ping --tenant=newping
+# then flush the stale page cache (Dragonfly, redis-compatible):
+docker exec new-pingwebsite-dragonfly-1 redis-cli --scan --pattern 'cache:page:*' \
+  | while read -r k; do docker exec new-pingwebsite-dragonfly-1 redis-cli DEL "$k"; done</code></pre>
+          <strong>Server-side code</strong> (a block’s <code>.ts</code>, a template, a
+          part) needs a <code>@cms/blocks</code> rebuild + an API restart:
+          <code>pnpm verify:theme</code> then <code>touch apps/api/src/index.ts</code>.
+        </div>
+
+        <h3 class="dg-h">Editor-controlled line breaks</h3>
+        <p>
+          To break a heading at a chosen word, put a real newline in the fixture copy and
+          set <code>white-space: pre-line</code> — don’t hard-code a <code>&lt;br&gt;</code>
+          (that would force <code>v-html</code> and turn editor copy into markup).
+        </p>
+        <pre class="dg-code"><code>// pages.json
+"title": "Some of our Growth\nPartners to Top Brands"
+
+/* the block */
+.xx-title { white-space: pre-line; }</code></pre>
+
+        <h3 class="dg-h">Verify before you call it done</h3>
+        <ul>
+          <li><code>pnpm verify:theme</code> → must be GREEN. It proves <em>structure</em>, not pixels — it never mounts the <code>.vue</code>.</li>
+          <li><code>pnpm check:theme-scope</code> → must be clean.</li>
+          <li>Then look at the page. The screenshot tool times out on this site, so assert with <code>getComputedStyle</code> in the browser instead of trusting your eyes.</li>
+          <li>
+            <strong>Motion cannot be verified in an automated browser pane.</strong> It
+            reports <code>document.visibilityState === 'hidden'</code>, so
+            <code>requestAnimationFrame</code> never fires,
+            <code>document.timeline.currentTime</code> is frozen at <code>0</code>, and
+            <code>IntersectionObserver</code> callbacks are never delivered — even for an
+            observer you create yourself on <code>document.body</code>. Everything
+            <code>v-reveal</code> touches therefore looks stuck and invisible. That is
+            the harness, not your code. Check the two halves separately:
+            drive the CSS with
+            <code>document.getAnimations().forEach(a =&gt; a.finish())</code> or by setting
+            <code>data-reveal="in"</code> by hand and asserting where it lands, and
+            confirm the JS half by checking the attribute was applied at all. Real
+            playback needs a real browser window.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ─────────────────────────────────────────────────────────── 9 -->
+      <section class="dg-sec" id="issues">
+        <h2>9 · Known issues</h2>
+        <p class="dg-lede">
+          Found during the audit, deliberately <strong>not</strong> fixed — recorded so
+          they aren’t mistaken for intent. Each is a small, separate change.
+        </p>
+        <table class="dg">
+          <thead><tr><th>Issue</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>--brand-navy</code> is dead</td>
+              <td><code>#0a1a5c</code> appears nowhere; the token has zero <code>var()</code> references. Its definition is its only occurrence.</td>
+            </tr>
+            <tr>
+              <td>Ambiguous colour tokens</td>
+              <td><code>--text</code> == <code>--brand-blue</code> (<code>#0f2d96</code>) and <code>--surface</code> == <code>--accent-fg</code> (<code>#ffffff</code>) — a hex→token lookup can’t be resolved for the two most common colours.</td>
+            </tr>
+            <tr>
+              <td>Phantom token</td>
+              <td><code>BlockGroup.vue</code> uses <code>var(--surface-muted, #f6f6f7)</code>; <code>--surface-muted</code> does not exist, so the fallback always wins.</td>
+            </tr>
+            <tr>
+              <td>Two orange hovers</td>
+              <td><code>#e0532f</code> (×6) vs <code>#e05a37</code> (×2, on <code>.btn-signin</code> + <code>.ping-submit</code>). Near-identical; almost certainly unintentional.</td>
+            </tr>
+            <tr>
+              <td>Two un-migrated pills</td>
+              <td><code>.kh-cta</code> and <code>.ping-submit</code> still use <code>--space-4</code> (15px vertical) while every other pill is <code>--space-3</code> (11px).</td>
+            </tr>
+            <tr>
+              <td>Odd pill weight</td>
+              <td><code>.btn-signin</code> is the only pill at <code>--fw-regular</code> (deliberate — “Join Our Network” was asked for at normal weight).</td>
+            </tr>
+            <tr>
+              <td>Fragile bleed</td>
+              <td><code>BlockKnowledgeHero</code> bleeds with <code>calc(var(--space-5) * -1)</code>; the same trick elsewhere uses <code>calc(var(--gutter) * -1)</code>. Identical today (both 24px) — silently breaks if <code>--gutter</code> changes.</td>
+            </tr>
+            <tr>
+              <td>Dead <code>variant</code> field</td>
+              <td><code>BlockShieldModel</code> computes <code>sm--{variant}</code> and the fixture sets light/dark, but <b>no <code>.sm--dark</code> rule exists</b> — both model cards render identically.</td>
+            </tr>
+            <tr>
+              <td>Legacy blocks off-system</td>
+              <td>175 font-size literals across 26 files, plus <code>max-width: 1440px</code> in 14 — all confined to the editorial set (see §1).</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <style>
+      /* Live component demos — the real recipes, verbatim from the blocks. */
+      .dg-pill {
+        display: inline-flex;
+        align-items: center;
+        color: #fff;
+        border-radius: 999px;
+        font-size: calc(var(--fs-sm) + 1px);
+        font-weight: var(--fw-semibold);
+        padding: calc(var(--space-3) - 1px) calc(var(--space-8) + 4px);
+        text-decoration: none;
+        transition: background 0.2s;
+      }
+      .dg-pill-orange { background: #ff6a4d; }
+      .dg-pill-orange:hover { background: #e0532f; }
+      .dg-pill-blue { background: #92deff; }
+      .dg-pill-blue:hover { background: #7fd3fa; }
+
+      .dg-plus {
+        position: relative;
+        width: 42px;
+        height: 42px;
+        border: 2px solid #0f2d96;
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+      }
+      .dg-plus::before,
+      .dg-plus::after {
+        content: '';
+        position: absolute;
+        background: #0f2d96;
+      }
+      .dg-plus::before {
+        top: 50%;
+        left: 11px;
+        right: 11px;
+        height: 2px;
+        transform: translateY(-50%);
+      }
+      .dg-plus::after {
+        left: 50%;
+        top: 11px;
+        bottom: 11px;
+        width: 2px;
+        transform: translateX(-50%);
+      }
+      .dg-plus-open { transform: rotate(45deg); }
+      .dg-plus-sm { width: 34px; height: 34px; }
+      .dg-plus-sm::before { left: 9px; right: 9px; }
+      .dg-plus-sm::after { top: 9px; bottom: 9px; }
+    </style>
+
+    <script>
+      // ── Everything below READS the live stylesheet. Nothing is hard-coded. ──
+      const ROOT = document.documentElement;
+      const cs = getComputedStyle(ROOT);
+      const tok = (n) => cs.getPropertyValue(n).trim();
+
+      /** Resolve an arbitrary CSS length by letting the browser compute it. This is
+       *  how the derived-recipe values below stay honest: we render the expression
+       *  and read back what it actually became.
+       *  NOTE: setProperty/getPropertyValue take the KEBAB-case property name
+       *  ('font-size'). Passing 'fontSize' fails silently — the declaration is
+       *  dropped and you read back the inherited value instead. */
+      function resolve(prop, value) {
+        const probe = document.createElement('div');
+        probe.style.position = 'absolute';
+        probe.style.visibility = 'hidden';
+        probe.style.setProperty(prop, value);
+        document.body.appendChild(probe);
+        const out = getComputedStyle(probe).getPropertyValue(prop);
+        probe.remove();
+        return out;
+      }
+
+      function table(id, rows, headers) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML =
+          '<thead><tr>' + headers.map((h) => `<th>${h}</th>`).join('') + '</tr></thead>' +
+          '<tbody>' +
+          rows
+            .map(
+              (r) =>
+                '<tr>' +
+                `<td><code>${r[0]}</code></td>` +
+                `<td class="dg-val">${tok(r[0]) || '—'}</td>` +
+                `<td>${r[1]}</td>` +
+                '</tr>',
+            )
+            .join('') +
+          '</tbody>';
+      }
+
+      const H = ['Token', 'Live value', 'Use it for'];
+
+      table('tbl-layout', [
+        ['--container', 'Max content width. Consumed by <code>.container-custom</code>.'],
+        ['--gutter', 'Side breathing room below the container width.'],
+        ['--section-y', 'The vertical rhythm every section band shares.'],
+        ['--header-h', 'Sticky header height. Also drives the mobile menu panel (top + max-height) and every sticky sidebar offset. 100px, 68px on phones — never re-measure it.'],
+      ], H);
+
+      table('tbl-type', [
+        ['--fs-display', 'Big stat numbers'],
+        ['--fs-h1', 'Page / hero title'],
+        ['--fs-h2', 'Section title'],
+        ['--fs-h3', 'Card / sub-section title'],
+        ['--fs-h4', 'Small card title'],
+        ['--fs-lead', 'Lead paragraph under a hero'],
+        ['--fs-body', '<b>Every paragraph, every page</b>'],
+        ['--fs-sm', 'Caption, meta, footer link, nav link'],
+        ['--fs-xs', 'Fine print, uppercase eyebrow'],
+      ], H);
+
+      table('tbl-lh', [
+        ['--lh-tight', 'Headings'],
+        ['--lh-snug', 'Short multi-line titles'],
+        ['--lh-body', 'Paragraphs'],
+      ], H);
+
+      table('tbl-fw', [
+        ['--fw-regular', 'Body copy, and the header CTA'],
+        ['--fw-medium', 'Stat labels'],
+        ['--fw-semibold', 'Buttons, eyebrows'],
+        ['--fw-bold', 'Headings, stat numbers'],
+      ], H);
+
+      table('tbl-space', [
+        ['--space-1', '4px'], ['--space-2', '8px'], ['--space-3', '12px — pill vertical base'],
+        ['--space-4', '16px'], ['--space-5', '24px — same as --gutter'], ['--space-6', '32px'],
+        ['--space-7', '40px'], ['--space-8', '48px'], ['--space-9', '64px'],
+        ['--space-10', '80px'], ['--space-12', '96px — note: there is no --space-11'],
+      ], H);
+
+      table('tbl-misc', [
+        ['--bg', 'Page background'], ['--surface', 'Card surface'],
+        ['--text', 'Default text (same value as --brand-blue)'],
+        ['--muted', 'Secondary text'], ['--accent', 'PING orange'],
+        ['--accent-fg', 'Text on accent'], ['--border', 'Hairlines'],
+        ['--brand-blue', 'PING navy'], ['--brand-blue-light', 'PING light blue'],
+        ['--brand-navy', '<b>dead — 0 uses</b>'],
+        ['--radius-sm', 'Small radius'], ['--radius', 'Default radius'],
+        ['--radius-lg', 'Large radius'], ['--radius-xl', 'Extra-large radius'],
+        ['--transition', 'Legacy easing — only the two Decode buttons'],
+        ['--ease-out', 'THE easing curve — everything motion uses it'],
+        ['--motion-fast', 'Colour / link hover'],
+        ['--motion-base', 'Card lift, image zoom'],
+        ['--motion-slow', 'A section revealing'],
+        ['--motion-draw', 'An SVG curve drawing itself in'],
+        ['--reveal-rise', 'How far a revealing element travels up'],
+        ['--reveal-stagger', 'Gap between items in a staggered grid'],
+        ['--curve-base', 'Curve design width — read by utils/curves.ts, not CSS'],
+        ['--curve-thickness', 'THE ribbon weight. Every curve on the site'],
+      ], H);
+
+      // ── Type specimens, rendered live ──
+      const SPECS = [
+        ['--fs-display', 'Big stat numbers', '202+'],
+        ['--fs-h1', 'Page / hero title', 'Protect Your YouTube Videos'],
+        ['--fs-h2', 'Section title', 'A bit about us!'],
+        ['--fs-h3', 'Card / sub-section title', 'Access to Kaching'],
+        ['--fs-h4', 'Small card title', 'Rajeshree Naik'],
+        ['--fs-lead', 'Lead paragraph, hero subtext', 'YouTube-native Content ID protection.'],
+        ['--fs-body', 'EVERY paragraph, every page', 'We have worked with 1000s of creators across geographies and verticals.'],
+        ['--fs-sm', 'Caption, meta, footer link, nav link', 'Aggregated Channels'],
+        ['--fs-xs', 'Fine print, uppercase eyebrow', 'WHO WE ARE'],
+      ];
+      document.getElementById('specimens').innerHTML = SPECS.map(
+        ([t, role, sample]) => `
+        <div class="dg-spec">
+          <div class="dg-spec-key">
+            <b>${t}</b>
+            <span class="dg-val">${tok(t)}</span><br />${role}
+          </div>
+          <div class="dg-spec-demo" style="font-size: var(${t}); font-weight: var(--fw-bold); line-height: var(--lh-tight);">${sample}</div>
+        </div>`,
+      ).join('');
+
+      // ── The four derived recipes — resolved by the browser, not typed in ──
+      const RECIPES = [
+        ['calc(var(--fs-display) + 16px)', 4, 'The big stat number — “12+”, “202+”, “01”. Anchor: home’s 12+.'],
+        ['calc(var(--fs-h3) - 2px)', 7, 'Large body copy / stat subtext / FAQ row.'],
+        ['calc(var(--fs-h2) - 4px)', 4, 'Shield-page section kicker (“How it works”, “Model 01”).'],
+        ['calc(var(--fs-sm) + 1px)', 10, 'Every pill label — i.e. the header nav size + 1px.'],
+      ];
+      document.getElementById('tbl-recipes').innerHTML =
+        '<thead><tr><th>Expression</th><th>Resolves to</th><th>Uses</th><th>Role</th></tr></thead><tbody>' +
+        RECIPES.map(
+          ([expr, uses, role]) =>
+            `<tr><td><code>${expr}</code></td><td class="dg-val">${resolve('font-size', expr)}</td><td>${uses}</td><td>${role}</td></tr>`,
+        ).join('') +
+        '</tbody>';
+
+      // ── Colour swatches ──
+      function swatches(id, list) {
+        document.getElementById(id).innerHTML = list
+          .map(
+            ([paint, name, note]) => `
+          <div class="dg-sw">
+            <div class="dg-sw-chip" style="background: ${paint}"></div>
+            <div class="dg-sw-meta"><b>${name}</b><span>${note}</span></div>
+          </div>`,
+          )
+          .join('');
+      }
+
+      swatches('sw-ping', [
+        ['var(--brand-blue)', 'Navy', `${tok('--brand-blue')} · token · headings, bands, text`],
+        ['#4295f8', 'Bright blue', '#4295f8 · no token · hero + CTA bands, cards'],
+        ['var(--brand-blue-light)', 'Light blue', `${tok('--brand-blue-light')} · token · blue pills, panels`],
+        ['var(--accent)', 'Orange', `${tok('--accent')} · token · pills, stats, accents`],
+        ['#e0532f', 'Orange hover', '#e0532f · no token'],
+        ['#7fd3fa', 'Light-blue hover', '#7fd3fa · no token'],
+        ['#ffffff', 'White', '#ffffff · surfaces, text on colour'],
+        ['var(--muted)', 'Muted', `${tok('--muted')} · token · secondary text`],
+        ['var(--border)', 'Border', `${tok('--border')} · token · hairlines`],
+      ]);
+
+      swatches('sw-legacy', [
+        ['#d34135', 'Editorial red', '#d34135 · 50 uses · NOT PING'],
+        ['#121212', 'Editorial black', '#121212 · 36 uses · NOT PING'],
+        ['#faf9f2', 'Editorial card', '#faf9f2 · NOT PING'],
+        ['#e5e4da', 'Editorial border', '#e5e4da · NOT PING'],
+        ['#f3f0e0', 'Editorial cream', '#f3f0e0 · NOT PING'],
+      ]);
+
+      // ── Prove the stylesheet is actually linked. If theme.css failed to load,
+      //    --container would be empty and every number above would be blank. ──
+      const badge = document.getElementById('dg-live-badge');
+      if (tok('--container')) {
+        badge.textContent =
+          `live from theme.css — --container ${tok('--container')}, --fs-h2 ${tok('--fs-h2')}, --fs-body ${tok('--fs-body')}`;
+      } else {
+        badge.style.background = '#fdecea';
+        badge.style.borderColor = '#b91c1c';
+        badge.style.color = '#b91c1c';
+        badge.textContent =
+          'theme.css did NOT load — open this file from its real location in the repo';
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Curve Studio</title>
+<style>
+  :root {
+    --bg: #0a0a12;
+    --panel: #12121c;
+    --ink: #f2efe9;
+    --muted: #83869c;
+    --bright: #fca652;
+    --border: rgba(255,255,255,0.1);
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); }
+  input:focus-visible, button:focus-visible { outline: 2px solid var(--bright); outline-offset: 2px; }
+
+  .app { max-width: 980px; margin: 0 auto; padding: 32px 20px 60px; }
+  .app h1 { font-family: var(--mono); font-size: 1.3rem; font-weight: 600; margin: 0 0 4px; }
+  .app .sub { color: var(--muted); font-size: 0.92rem; margin: 0 0 20px; max-width: 62ch; }
+
+  .toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 18px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px 10px 0 0; padding: 12px 16px; border-bottom: none;
+  }
+  .mode-tabs { display: flex; gap: 4px; background: rgba(0,0,0,0.3); padding: 3px; border-radius: 8px; }
+  .mode-tabs button {
+    font-family: var(--mono); font-size: 0.8rem; background: transparent; border: none;
+    color: var(--muted); padding: 7px 14px; border-radius: 6px; cursor: pointer;
+  }
+  .mode-tabs button.active { background: var(--bright); color: #16130c; font-weight: 600; }
+
+  .field { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+  .field input[type=color] { width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 6px; background: none; padding: 0; cursor: pointer; }
+  .field input[type=range] { accent-color: var(--bright); width: 100px; }
+  .field span.val { color: var(--ink); min-width: 2.4em; }
+
+  .hint { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin: 10px 2px; min-height: 1.4em; }
+
+  .canvas-wrap { background: #050508; border: 1px solid var(--border); touch-action: none; }
+  .canvas-wrap svg { display: block; width: 100%; height: auto; cursor: crosshair; }
+
+  .footer-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--panel); border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 10px 10px; padding: 10px 16px;
+  }
+  .footer-bar .btns { display: flex; gap: 8px; }
+  button.action {
+    font-family: var(--mono); font-size: 0.8rem; background: transparent;
+    border: 1px solid var(--border); color: var(--ink); padding: 7px 14px;
+    border-radius: 6px; cursor: pointer;
+  }
+  button.action:hover { border-color: var(--bright); color: var(--bright); }
+  button.action.primary { background: var(--bright); color: #16130c; border-color: var(--bright); font-weight: 600; }
+
+  .output { margin-top: 16px; background: #050508; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .output pre { font-family: var(--mono); font-size: 0.76rem; color: var(--bright); margin: 0; white-space: pre-wrap; word-break: break-all; max-height: 140px; overflow-y: auto; }
+  .output .empty { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Curve Studio</h1>
+  <p class="sub">Freehand strokes get simplified then smoothed. Angled curves connect two points at exact tangent angles — and stay editable: click one later and drag its handles to reshape it.</p>
+
+  <div class="toolbar">
+    <div class="mode-tabs">
+      <button id="freehandBtn" class="active">freehand</button>
+      <button id="angledBtn">angled</button>
+    </div>
+    <div class="field">
+      <label>color</label>
+      <input type="color" id="colorInput" value="#fca652" />
+    </div>
+    <div class="field">
+      <label>width</label>
+      <input type="range" id="widthInput" min="1" max="12" value="3" />
+      <span class="val" id="widthVal">3</span>
+    </div>
+    <div class="field" id="freehandControls">
+      <label>smoothing</label>
+      <input type="range" id="smoothInput" min="0" max="10" value="3" />
+      <span class="val" id="smoothVal">3</span>
+    </div>
+  </div>
+
+  <p class="hint" id="modeHint">click and drag to draw — it gets simplified + smoothed on release</p>
+
+  <div class="canvas-wrap">
+    <svg id="canvas" viewBox="0 0 940 460">
+      <g id="permanentGroup"></g>
+      <g id="previewLayer"></g>
+      <path id="livePreviewPath" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="footer-bar">
+    <div class="btns">
+      <button class="action" id="undoBtn">undo</button>
+      <button class="action" id="clearBtn">clear</button>
+    </div>
+    <button class="action primary" id="copyBtn">copy svg</button>
+  </div>
+
+  <div class="output">
+    <pre id="outputEl"><span class="empty">// draw something — the path data appears here</span></pre>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// GEOMETRY
+// An angled curve IS just a cubic bezier: M p0 C c1 c2 p1.
+// "Angle" and "distance" at a point are never stored separately —
+// they're just how a human describes where the control point (c1
+// or c2) sits relative to its anchor. So editing angle+distance
+// later is literally just dragging that control point to a new
+// (x,y). Nothing else needs to change.
+// ============================================================
+const r = (v) => Math.round(v * 10) / 10;
+
+function angledD(item) {
+  return `M ${r(item.p0.x)},${r(item.p0.y)} C ${r(item.c1.x)},${r(item.c1.y)} ${r(item.c2.x)},${r(item.c2.y)} ${r(item.p1.x)},${r(item.p1.y)}`;
+}
+
+function perpendicularDistance(point, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const len = Math.hypot(dx, dy);
+  if (len === 0) return Math.hypot(point.x - a.x, point.y - a.y);
+  const t = ((point.x - a.x) * dx + (point.y - a.y) * dy) / (len * len);
+  const px = a.x + t * dx, py = a.y + t * dy;
+  return Math.hypot(point.x - px, point.y - py);
+}
+function simplifyRDP(points, epsilon) {
+  if (points.length < 3) return points;
+  let maxDist = 0, index = 0;
+  const a = points[0], b = points[points.length - 1];
+  for (let i = 1; i < points.length - 1; i++) {
+    const d = perpendicularDistance(points[i], a, b);
+    if (d > maxDist) { maxDist = d; index = i; }
+  }
+  if (maxDist > epsilon) {
+    const left = simplifyRDP(points.slice(0, index + 1), epsilon);
+    const right = simplifyRDP(points.slice(index), epsilon);
+    return left.slice(0, -1).concat(right);
+  }
+  return [a, b];
+}
+function smoothPath(points) {
+  if (points.length < 2) return '';
+  if (points.length === 2) return `M ${r(points[0].x)},${r(points[0].y)} L ${r(points[1].x)},${r(points[1].y)}`;
+  const tangent = (i) => {
+    if (i === 0) return { x: points[1].x - points[0].x, y: points[1].y - points[0].y };
+    if (i === points.length - 1) return { x: points[i].x - points[i - 1].x, y: points[i].y - points[i - 1].y };
+    return { x: (points[i + 1].x - points[i - 1].x) / 2, y: (points[i + 1].y - points[i - 1].y) / 2 };
+  };
+  let d = `M ${r(points[0].x)},${r(points[0].y)} `;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i], p1 = points[i + 1];
+    const t0 = tangent(i), t1 = tangent(i + 1);
+    d += `C ${r(p0.x + t0.x / 3)},${r(p0.y + t0.y / 3)} ${r(p1.x - t1.x / 3)},${r(p1.y - t1.y / 3)} ${r(p1.x)},${r(p1.y)} `;
+  }
+  return d;
+}
+
+// ============================================================
+// STATE
+// ============================================================
+const canvas = document.getElementById('canvas');
+const permanentGroup = document.getElementById('permanentGroup');
+const previewLayer = document.getElementById('previewLayer');
+const livePreviewPath = document.getElementById('livePreviewPath');
+const outputEl = document.getElementById('outputEl');
+const modeHint = document.getElementById('modeHint');
+const freehandBtn = document.getElementById('freehandBtn');
+const angledBtn = document.getElementById('angledBtn');
+const freehandControls = document.getElementById('freehandControls');
+const colorInput = document.getElementById('colorInput');
+const widthInput = document.getElementById('widthInput');
+const widthVal = document.getElementById('widthVal');
+const smoothInput = document.getElementById('smoothInput');
+const smoothVal = document.getElementById('smoothVal');
+const undoBtn = document.getElementById('undoBtn');
+const clearBtn = document.getElementById('clearBtn');
+const copyBtn = document.getElementById('copyBtn');
+
+const HIT_RADIUS = 12;
+const HANDLE_COLOR = '#f2efe9';
+
+let mode = 'freehand';
+let strokeColor = colorInput.value;
+let strokeWidth = +widthInput.value;
+let smoothing = +smoothInput.value;
+
+let items = [];      // { id, type:'freehand', d, color, width } | { id, type:'angled', p0,c1,c2,p1, color, width }
+let nextId = 1;
+let selectedId = null;
+
+let isDrawing = false;
+let rawPoints = [];
+
+let angledStage = 'idle'; // idle -> placingHandle0 -> awaitingPoint1 -> placingHandle1 -> idle
+let draft = null;         // { p0, c1, c2, p1 } while creating
+let dragTarget = null;    // { itemId, key } while editing an existing curve's point
+
+function getSVGPoint(clientX, clientY) {
+  const pt = canvas.createSVGPoint();
+  pt.x = clientX; pt.y = clientY;
+  return pt.matrixTransform(canvas.getScreenCTM().inverse());
+}
+
+function setMode(m) {
+  mode = m;
+  freehandBtn.classList.toggle('active', m === 'freehand');
+  angledBtn.classList.toggle('active', m === 'angled');
+  freehandControls.style.display = m === 'freehand' ? 'flex' : 'none';
+  modeHint.textContent = m === 'freehand'
+    ? 'click and drag to draw — it gets simplified + smoothed on release'
+    : 'click-drag to place a point + handle, then again for the second point. click any angled curve afterward to re-select and drag its handles (esc cancels/deselects).';
+  isDrawing = false; rawPoints = [];
+  angledStage = 'idle'; draft = null; dragTarget = null; selectedId = null;
+  livePreviewPath.setAttribute('d', '');
+  renderAll();
+}
+freehandBtn.addEventListener('click', () => setMode('freehand'));
+angledBtn.addEventListener('click', () => setMode('angled'));
+
+colorInput.addEventListener('input', (e) => strokeColor = e.target.value);
+widthInput.addEventListener('input', (e) => { strokeWidth = +e.target.value; widthVal.textContent = strokeWidth; });
+smoothInput.addEventListener('input', (e) => { smoothing = +e.target.value; smoothVal.textContent = smoothing; });
+
+function pathTag(d, item) {
+  return `<path d="${d}" fill="none" stroke="${item.color}" stroke-width="${item.width}" stroke-linecap="round"/>`;
+}
+function dotHTML(p, hollow, radius) {
+  return hollow
+    ? `<circle cx="${r(p.x)}" cy="${r(p.y)}" r="${radius}" fill="#050508" stroke="${HANDLE_COLOR}" stroke-width="2"/>`
+    : `<circle cx="${r(p.x)}" cy="${r(p.y)}" r="${radius}" fill="${HANDLE_COLOR}"/>`;
+}
+function guideLine(a, b) {
+  return `<line x1="${r(a.x)}" y1="${r(a.y)}" x2="${r(b.x)}" y2="${r(b.y)}" stroke="${HANDLE_COLOR}" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.7"/>`;
+}
+function handleOverlayHTML(item) {
+  return guideLine(item.p0, item.c1) + guideLine(item.p1, item.c2)
+    + dotHTML(item.p0, false, 5) + dotHTML(item.p1, false, 5)
+    + dotHTML(item.c1, true, 4) + dotHTML(item.c2, true, 4);
+}
+function draftOverlayHTML() {
+  let h = guideLine(draft.p0, draft.c1) + dotHTML(draft.p0, false, 5) + dotHTML(draft.c1, true, 4);
+  if (angledStage === 'placingHandle1' && draft.p1 && draft.c2) {
+    h += guideLine(draft.p1, draft.c2) + dotHTML(draft.p1, false, 5) + dotHTML(draft.c2, true, 4);
+    h += `<path d="${angledD(draft)}" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}" opacity="0.65"/>`;
+  }
+  return h;
+}
+
+function renderAll() {
+  let html = '';
+  for (const item of items) {
+    const d = item.type === 'angled' ? angledD(item) : item.d;
+    if (item.id === selectedId) {
+      html += `<path d="${d}" fill="none" stroke="${HANDLE_COLOR}" stroke-width="${item.width + 7}" stroke-linecap="round" opacity="0.22"/>`;
+    }
+    html += pathTag(d, item);
+    if (item.type === 'angled') {
+      html += `<path class="hit-path" data-id="${item.id}" d="${d}" fill="none" stroke="transparent" stroke-width="18" style="pointer-events:stroke;"/>`;
+    }
+  }
+  permanentGroup.innerHTML = html;
+
+  let overlay = '';
+  if (angledStage !== 'idle' && draft) {
+    overlay = draftOverlayHTML();
+  } else if (selectedId !== null) {
+    const item = items.find((it) => it.id === selectedId);
+    if (item && item.type === 'angled') overlay = handleOverlayHTML(item);
+  }
+  previewLayer.innerHTML = overlay;
+
+  if (!items.length) {
+    outputEl.innerHTML = '<span class="empty">// draw something — the path data appears here</span>';
+  } else {
+    outputEl.textContent = items.map((it) => pathTag(it.type === 'angled' ? angledD(it) : it.d, it)).join('\n');
+  }
+}
+
+undoBtn.addEventListener('click', () => {
+  items.pop();
+  if (selectedId !== null && !items.find((it) => it.id === selectedId)) selectedId = null;
+  renderAll();
+});
+clearBtn.addEventListener('click', () => { items = []; selectedId = null; renderAll(); });
+copyBtn.addEventListener('click', async () => {
+  if (!items.length) return;
+  const text = items.map((it) => pathTag(it.type === 'angled' ? angledD(it) : it.d, it)).join('\n');
+  try {
+    await navigator.clipboard.writeText(text);
+    copyBtn.textContent = 'copied!';
+    setTimeout(() => copyBtn.textContent = 'copy svg', 1100);
+  } catch {
+    const range = document.createRange();
+    range.selectNodeContents(outputEl);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+});
+
+// ---- pointer handling ----
+canvas.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  canvas.setPointerCapture(e.pointerId);
+  const pt = getSVGPoint(e.clientX, e.clientY);
+
+  if (mode === 'freehand') {
+    isDrawing = true;
+    rawPoints = [pt];
+    livePreviewPath.setAttribute('stroke', strokeColor);
+    livePreviewPath.setAttribute('stroke-width', strokeWidth);
+    return;
+  }
+
+  // an in-progress creation always takes priority over selection/hit-testing
+  if (angledStage === 'awaitingPoint1') {
+    draft.p1 = pt;
+    draft.c2 = { x: pt.x, y: pt.y };
+    angledStage = 'placingHandle1';
+    renderAll();
+    return;
+  }
+  if (angledStage !== 'idle') return; // mid-drag with pointer capture, shouldn't fire
+
+  // dragging a handle/anchor of the currently selected curve?
+  if (selectedId !== null) {
+    const item = items.find((it) => it.id === selectedId);
+    if (item) {
+      for (const key of ['p0', 'c1', 'c2', 'p1']) {
+        const d = item[key];
+        if (Math.hypot(pt.x - d.x, pt.y - d.y) < HIT_RADIUS) {
+          dragTarget = { itemId: item.id, key };
+          return;
+        }
+      }
+    }
+  }
+  // clicking an existing angled curve to select it?
+  if (e.target.classList && e.target.classList.contains('hit-path')) {
+    selectedId = +e.target.dataset.id;
+    renderAll();
+    return;
+  }
+  // empty space: deselect and start a new curve
+  selectedId = null;
+  draft = { p0: pt, c1: { x: pt.x, y: pt.y }, c2: null, p1: null };
+  angledStage = 'placingHandle0';
+  renderAll();
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  const pt = getSVGPoint(e.clientX, e.clientY);
+
+  if (mode === 'freehand' && isDrawing) {
+    rawPoints.push(pt);
+    livePreviewPath.setAttribute('d', rawPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '));
+    return;
+  }
+  if (mode !== 'angled') return;
+
+  if (dragTarget) {
+    const item = items.find((it) => it.id === dragTarget.itemId);
+    if (!item) return;
+    if (dragTarget.key === 'p0') {
+      const dx = pt.x - item.p0.x, dy = pt.y - item.p0.y;
+      item.p0 = { x: pt.x, y: pt.y };
+      item.c1 = { x: item.c1.x + dx, y: item.c1.y + dy };
+    } else if (dragTarget.key === 'p1') {
+      const dx = pt.x - item.p1.x, dy = pt.y - item.p1.y;
+      item.p1 = { x: pt.x, y: pt.y };
+      item.c2 = { x: item.c2.x + dx, y: item.c2.y + dy };
+    } else {
+      item[dragTarget.key] = { x: pt.x, y: pt.y }; // c1 or c2: angle + distance both change with the drag
+    }
+    renderAll();
+    return;
+  }
+
+  if (angledStage === 'placingHandle0') {
+    draft.c1 = { x: pt.x, y: pt.y };
+    renderAll();
+  } else if (angledStage === 'placingHandle1') {
+    draft.c2 = { x: pt.x, y: pt.y };
+    renderAll();
+  }
+});
+
+canvas.addEventListener('pointerup', () => {
+  if (mode === 'freehand' && isDrawing) {
+    isDrawing = false;
+    if (rawPoints.length >= 2) {
+      const simplified = simplifyRDP(rawPoints, smoothing);
+      items.push({ id: nextId++, type: 'freehand', d: smoothPath(simplified), color: strokeColor, width: strokeWidth });
+      renderAll();
+    }
+    livePreviewPath.setAttribute('d', '');
+    rawPoints = [];
+    return;
+  }
+  if (mode !== 'angled') return;
+
+  if (dragTarget) { dragTarget = null; return; }
+
+  if (angledStage === 'placingHandle0') {
+    angledStage = 'awaitingPoint1';
+    renderAll();
+  } else if (angledStage === 'placingHandle1') {
+    const newItem = { id: nextId++, type: 'angled', p0: draft.p0, c1: draft.c1, c2: draft.c2, p1: draft.p1, color: strokeColor, width: strokeWidth };
+    items.push(newItem);
+    selectedId = newItem.id; // stay editable immediately after creation
+    angledStage = 'idle';
+    draft = null;
+    renderAll();
+  }
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || mode !== 'angled') return;
+  if (angledStage !== 'idle') { angledStage = 'idle'; draft = null; }
+  else if (selectedId !== null) { selectedId = null; }
+  dragTarget = null;
+  renderAll();
+});
+
+setMode('freehand');
+</script>
+</body>
+</html>

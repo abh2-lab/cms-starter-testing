@@ -1,0 +1,24 @@
+{
+  "name": "@cms/theme-kit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "AI theme-authoring kit: gen:block / gen:template code generators + verify:theme structure gate. Dev/build-time tooling — never imported by the runtime apps.",
+  "type": "module",
+  "scripts": {
+    "gen:block": "tsx src/cli.ts gen:block",
+    "gen:template": "tsx src/cli.ts gen:template",
+    "verify": "pnpm --filter @cms/blocks build && tsx src/cli.ts verify",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rimraf dist .turbo"
+  },
+  "dependencies": {
+    "@cms/blocks": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.2",
+    "typescript": "^6.0.3"
+  }
+}

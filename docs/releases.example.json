@@ -1,0 +1,52 @@
+{
+  "$comment": [
+    "Reference copy of the release manifest. The LIVE copy does not belong in this repo —",
+    "the core repo is private, and every publisher install fetches the manifest daily without",
+    "credentials. Publish it from a small PUBLIC repo (e.g. abh2-lab/cms-releases) and point",
+    "UPDATE_MANIFEST_URL at its raw URL. It carries version numbers and links only.",
+    "",
+    "Parser rules (apps/worker/src/lib/update-check.ts):",
+    "  - Either a bare array or { releases: [...] } is accepted, so top-level fields can be",
+    "    added later without breaking older installs.",
+    "  - Unknown fields are ignored; a malformed entry is dropped, not fatal.",
+    "  - Order does not matter — entries are sorted by version before comparison.",
+    "  - version and type are required. An entry missing either is skipped.",
+    "notes_url MUST point somewhere PUBLIC. A link into the private core repo's releases",
+    "page 404s for every publisher who clicks it — point at the CHANGELOG in this same",
+    "public repo instead.",
+    "See docs/phase-3-versioning-and-updates-plan.md."
+  ],
+  "releases": [
+    {
+      "version": "1.0.0",
+      "type": "code",
+      "released": "2026-08-25",
+      "notes_url": "https://github.com/abh2-lab/cms-releases/blob/main/CHANGELOG.md#100"
+    },
+    {
+      "$comment": "Example of a normal code release — no migrations, nothing to prepare.",
+      "version": "1.1.0",
+      "type": "code",
+      "released": "2026-09-01",
+      "notes_url": "https://github.com/abh2-lab/cms-releases/blob/main/CHANGELOG.md#110"
+    },
+    {
+      "$comment": [
+        "Example of a release that runs migrations. type:'schema' forces requires_backup",
+        "true in the worker regardless of what is written here, and the admin shows the",
+        "stricter banner. new_env_vars are surfaced in that banner because @cms/config",
+        "exits the container at boot when a required var is missing — better a checklist",
+        "than a crash loop.",
+        "min_upgrade_from means the install must ALREADY be running that version. An",
+        "install on 1.0.0 is offered 1.1.0 first, not this one."
+      ],
+      "version": "1.2.0",
+      "type": "schema",
+      "released": "2026-09-14",
+      "notes_url": "https://github.com/abh2-lab/cms-releases/blob/main/CHANGELOG.md#120",
+      "min_upgrade_from": "1.1.0",
+      "requires_backup": true,
+      "new_env_vars": ["EXAMPLE_NEW_SETTING"]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+// Standard Nuxt 4 root tsconfig — references the per-context tsconfigs that
+// `nuxt prepare` writes into .nuxt/. ESLint's projectService (and editor
+// tooling) follows the references and resolves nuxt.config.ts via
+// tsconfig.node.json. Don't add `include` here; let the references own scope.
+{
+  "files": [],
+  "references": [
+    { "path": "./.nuxt/tsconfig.app.json" },
+    { "path": "./.nuxt/tsconfig.server.json" },
+    { "path": "./.nuxt/tsconfig.shared.json" },
+    { "path": "./.nuxt/tsconfig.node.json" }
+  ]
+}

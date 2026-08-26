@@ -1,0 +1,8 @@
+[
+  {
+    "from_path": "/old-welcome",
+    "to_path": "/article/example-fixture-welcome",
+    "redirect_type": 301,
+    "notes": "Seeded by fixture-loader example set."
+  }
+]

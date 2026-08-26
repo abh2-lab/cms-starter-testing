@@ -1,0 +1,1 @@
+ALTER TABLE "content" ADD COLUMN "template_key" text;

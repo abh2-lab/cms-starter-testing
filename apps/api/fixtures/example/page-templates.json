@@ -1,0 +1,8 @@
+[
+  {
+    "key": "example-hero-plus-list",
+    "name": "Hero + latest news",
+    "description": "User-saved template demonstrating the page-templates fixture.",
+    "block_keys": ["hero", "latest-news"]
+  }
+]

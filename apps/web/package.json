@@ -1,0 +1,38 @@
+{
+  "name": "@cms/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Nuxt 4 public site for the CMS",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/require-port.mjs && nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "test": "vitest run --passWithNoTests",
+    "clean": "rimraf .nuxt .output .turbo"
+  },
+  "dependencies": {
+    "@cms/editor": "workspace:*",
+    "@tiptap/core": "^3.23.6",
+    "@tiptap/extension-color": "^3.23.6",
+    "@tiptap/extension-table": "^3.23.6",
+    "@tiptap/extension-table-cell": "^3.23.6",
+    "@tiptap/extension-table-header": "^3.23.6",
+    "@tiptap/extension-table-row": "^3.23.6",
+    "@tiptap/extension-text-align": "^3.23.6",
+    "@tiptap/extension-text-style": "^3.23.6",
+    "@tiptap/html": "^3.23.6",
+    "@tiptap/pm": "^3.23.6",
+    "@tiptap/starter-kit": "^3.23.6",
+    "nuxt": "^4.4.7",
+    "sanitize-html": "^2.17.4"
+  },
+  "devDependencies": {
+    "@cms/blocks": "workspace:*",
+    "@types/sanitize-html": "^2.16.1",
+    "rimraf": "^6.0.1",
+    "vitest": "^4.1.6"
+  }
+}

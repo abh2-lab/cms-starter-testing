@@ -1,0 +1,23 @@
+[
+  {
+    "slug": "categories",
+    "name": "Categories",
+    "kind": "category",
+    "is_hierarchical": true,
+    "terms": [
+      { "slug": "politics", "name": "Politics", "sort_order": 0 },
+      { "slug": "business", "name": "Business", "sort_order": 1 },
+      { "slug": "local", "name": "Local", "sort_order": 2 }
+    ]
+  },
+  {
+    "slug": "tags",
+    "name": "Tags",
+    "kind": "tag",
+    "is_hierarchical": false,
+    "terms": [
+      { "slug": "breaking", "name": "Breaking" },
+      { "slug": "analysis", "name": "Analysis" }
+    ]
+  }
+]

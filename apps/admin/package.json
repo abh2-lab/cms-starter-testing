@@ -1,0 +1,49 @@
+{
+  "name": "@cms/admin",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Vue 3 + Vite admin dashboard for the CMS",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "preview": "vite preview",
+    "clean": "rimraf dist .turbo"
+  },
+  "dependencies": {
+    "@cms/admin-guide": "workspace:*",
+    "@cms/editor": "workspace:*",
+    "@cms/types": "workspace:*",
+    "@tiptap/core": "^3.23.6",
+    "@tiptap/extension-color": "^3.23.6",
+    "@tiptap/extension-placeholder": "^3.23.6",
+    "@tiptap/extension-table": "^3.23.6",
+    "@tiptap/extension-table-cell": "^3.23.6",
+    "@tiptap/extension-table-header": "^3.23.6",
+    "@tiptap/extension-table-row": "^3.23.6",
+    "@tiptap/extension-text-align": "^3.23.6",
+    "@tiptap/extension-text-style": "^3.23.6",
+    "@tiptap/starter-kit": "^3.23.6",
+    "@tiptap/suggestion": "^3.23.6",
+    "@tiptap/vue-3": "^3.23.6",
+    "dompurify": "^3.4.8",
+    "highlight.js": "^11.11.1",
+    "markdown-it": "^14.2.0",
+    "pinia": "^2.3.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^22.10.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vite-plugin-vue-devtools": "^8.1.2",
+    "vitest": "^4.1.6",
+    "vue-tsc": "^2.2.0"
+  }
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "slug": "main-nav",
+    "name": "Main Navigation",
+    "items": [
+      { "label": "Home", "url": "/", "sort_order": 0 },
+      { "label": "Articles", "url": "/stories", "sort_order": 1 },
+      {
+        "label": "About",
+        "content_type_slug": "page",
+        "content_slug": "about-the-fixtures",
+        "sort_order": 2
+      }
+    ]
+  },
+  {
+    "slug": "footer-nav",
+    "name": "Footer",
+    "items": [
+      { "label": "About", "url": "/about-the-fixtures", "sort_order": 0 }
+    ]
+  }
+]

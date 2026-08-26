@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PING Network — Contact (design reference)</title>
+
+<!--
+  ============================================================================
+  PING NETWORK — STATIC DESIGN REFERENCE (contact)
+  ----------------------------------------------------------------------------
+  Self-contained snapshot of the live /contact page ("Ping Us!"), for the
+  WordPress rebuild. The form is a VISUAL MOCK only — the inputs show but the
+  Submit button does nothing (a static file can't POST). Shared shell (head
+  CSS, header, footer) is identical to home.html.
+  ============================================================================
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ========================================================================== */
+/* ===== SHARED SHELL — copy verbatim into every page ======================= */
+/* ========================================================================== */
+
+:root {
+  /* Brand palette */
+  --bg: #faf7f4;
+  --brand-blue: #0f2d96;   /* deep blue — text, navy bands, footer */
+  --brand-mid: #4295f8;    /* medium blue — hero band, accents */
+  --sky: #92deff;          /* light blue — bands + most curves */
+  --orange: #ff6a4d;       /* accent — pills, stats, orange band */
+  --orange-hover: #e0532f;
+  --muted: #5b6aa0;
+
+  /* Curve system (documentation — the shared weight lives on each <svg>) */
+  --curve-base: 1440;
+  --curve-thickness: 130;
+
+  /* Layout */
+  --container: 1200px;
+  --gutter: 24px;
+  --header-h: 100px;
+
+  /* Type scale — fluid + proportional, copied from the live theme tokens */
+  --fs-display: calc(clamp(57.6px, 42.873px + 4.602vw, 90px) - 16px);
+  --fs-h1: clamp(32px, 23.818px + 2.557vw, 50px);
+  --fs-h2: clamp(24.32px, 18.102px + 1.943vw, 38px);
+  --fs-h3: clamp(19.2px, 14.291px + 1.534vw, 30px);
+  --fs-h4: clamp(18px, 10.48px + 1.125vw, 22px);
+  --fs-lead: clamp(17px, 9.527px + 1.023vw, 20px);
+  --fs-body: clamp(17px, 8.575px + 0.92vw, 18px);
+  --fs-sm: 16px;
+  --fs-xs: 14px;
+
+  --lh-tight: 1.15;
+  --lh-snug: 1.3;
+  --lh-body: 1.55;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* Spacing (8px base) */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 40px; --space-8: 48px;
+  --space-9: 64px; --space-10: 80px; --space-12: 96px;
+
+  --section-y: clamp(48px, 33.455px + 4.545vw, 80px);
+  --pill-font: calc(var(--fs-sm) + 1px);
+  --pill-pad-y: calc(var(--space-3) - 1px);
+  --pill-pad-x: calc(var(--space-8) + 4px);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--brand-blue);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+img { max-width: 100%; height: auto; display: block; }
+a { color: var(--orange); }
+
+.container-custom {
+  width: min(100% - (var(--gutter) * 2), var(--container));
+  margin-inline: auto;
+}
+
+/* ---- Pill CTAs (shared) --------------------------------------------------- */
+.pill {
+  display: inline-flex; align-items: center;
+  border-radius: 999px;
+  padding: var(--pill-pad-y) var(--pill-pad-x);
+  font-size: var(--pill-font); font-weight: var(--fw-semibold);
+  text-decoration: none; border: 2px solid transparent;
+  transition: background .2s, color .2s;
+}
+.pill--orange { background: var(--orange); color: #fff; }
+.pill--orange:hover { background: var(--orange-hover); }
+
+/* ---- Curve layer ---------------------------------------------------------- */
+/* The section that hosts a curve gets .has-curve; the curve <svg> is absolutely
+   placed behind the content. Weight is the SHARED 130 units set on each <svg>. */
+.has-curve { position: relative; overflow: hidden; }
+.has-curve > .container-custom,
+.has-curve > .inner { position: relative; z-index: 1; }
+.curve { position: absolute; pointer-events: none; z-index: 0; }
+/* span-x, anchored bottom (crests / hero swooshes running off the bottom) */
+.curve--x-bottom { left: 0; right: 0; bottom: 0; width: 100%; height: auto; }
+/* span-x, anchored top (page-spanning ribbons that fall away downward) */
+.curve--x-top { left: 0; right: 0; top: 0; width: 100%; height: auto; }
+/* span-y, anchored to a side (side bands / vertical sweeps) */
+.curve--y-right { top: 0; bottom: 0; right: 0; height: 100%; width: auto; }
+.curve--y-left  { top: 0; bottom: 0; left: 0;  height: 100%; width: auto; }
+.curve path { fill: none; stroke-width: 130; stroke-linecap: round; stroke-linejoin: round; }
+.curve--sky path    { stroke: #92deff; }
+.curve--orange path { stroke: #ff6a4d; }
+.curve--blue path   { stroke: #4295f8; }
+
+/* ========================================================================== */
+/* ===== SITE HEADER (SHARED SHELL) ========================================= */
+/* ========================================================================== */
+.nav-cb { display: none; }
+.site-header {
+  background: #fff;
+  border-bottom: 1px solid rgba(15,45,150,.08);
+  height: var(--header-h);
+  position: sticky; top: 0; z-index: 1000;
+}
+.nav-row {
+  height: 100%;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  gap: var(--space-7);
+}
+.navbar-brand { justify-self: start; display: inline-flex; align-items: center; line-height: 0; }
+.header-logo { height: 46px; width: auto; max-width: none; }
+.navbar-collapse { display: flex; justify-content: center; }
+.navbar-nav { display: flex; align-items: center; gap: var(--space-6); list-style: none; }
+.nav-link {
+  color: var(--brand-blue); font-weight: var(--fw-bold); font-size: var(--fs-sm);
+  text-decoration: none; padding: var(--space-2) 0; transition: color .2s;
+}
+.nav-link:hover, .nav-link.is-active { color: var(--orange); }
+.header-actions { justify-self: end; display: flex; align-items: center; gap: var(--space-5); }
+.btn-signin {
+  background: var(--orange); color: #fff; font-weight: var(--fw-regular);
+  font-size: var(--pill-font); padding: var(--pill-pad-y) calc(var(--space-5) + 4px);
+  border-radius: 999px; text-decoration: none; transition: background .2s; white-space: nowrap;
+}
+.btn-signin:hover { background: var(--orange-hover); }
+.hamburger { display: none; background: none; border: none; color: var(--brand-blue); cursor: pointer; padding: 8px; }
+.hamburger svg { width: 26px; height: 26px; }
+
+@media (max-width: 1199px) {
+  .nav-row { grid-template-columns: auto 1fr; gap: var(--space-4); }
+  .hamburger { display: inline-flex; }
+  .navbar-collapse {
+    position: fixed; top: var(--header-h); bottom: 0; left: 0; width: 260px;
+    background: var(--bg); box-shadow: 4px 0 24px rgba(15,45,150,.12);
+    padding: var(--space-5); transform: translateX(-100%);
+    transition: transform .35s cubic-bezier(.22,.61,.36,1); z-index: 999;
+  }
+  .nav-cb:checked ~ .nav-row .navbar-collapse { transform: none; }
+  .navbar-nav { flex-direction: column; align-items: stretch; gap: 0; }
+  .nav-item { border-bottom: 1px solid rgba(15,45,150,.08); }
+  .nav-link { display: block; padding: var(--space-3) 0; }
+  .btn-signin { padding: 8px 22px; }
+}
+@media (max-width: 768px) { :root { --header-h: 68px; } .header-logo { height: 34px; } }
+
+/* ========================================================================== */
+/* ===== SITE FOOTER (SHARED SHELL) ========================================= */
+/* ========================================================================== */
+.site-footer { background: var(--brand-blue); padding: var(--section-y) 0 var(--space-6); }
+.footer-cols {
+  display: grid;
+  grid-template-columns: 1.75fr 1.75fr minmax(190px, 1fr) auto;
+  column-gap: var(--space-9); row-gap: var(--space-7); align-items: start;
+}
+.footer-col { min-width: 0; }
+.footer-logo { width: 137px; height: auto; margin-bottom: var(--space-5); }
+.footer-about, .footer-contact-company, .footer-contact-address,
+.footer-cv-label, .footer-links a, .footer-contact-link {
+  color: #fff; font-size: var(--fs-sm); line-height: var(--lh-body);
+}
+.footer-heading { color: #fff; font-weight: var(--fw-bold); font-size: var(--fs-h4); line-height: var(--lh-tight); margin: 0 0 var(--space-4); }
+.footer-contact-company { margin: 0 0 var(--space-1); }
+.footer-contact-address { margin: 0 0 var(--space-3); }
+.footer-contact-link { text-decoration: underline; display: inline-block; margin-bottom: var(--space-4); }
+.footer-contact-link:hover { color: var(--orange); }
+.footer-cv-label { margin: 0 0 var(--space-1); }
+.footer-links { list-style: none; }
+.footer-links a { text-decoration: none; display: inline-block; padding: 3px 0; }
+.footer-links a:hover { color: var(--orange); }
+.footer-social-row { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-7); }
+.social-icon { color: #fff; display: inline-flex; }
+.social-icon:hover { color: var(--orange); }
+.icon-social { width: 18px; height: 18px; }
+.footer-col-pmark { align-self: center; display: flex; justify-content: flex-end; }
+.footer-pmark { width: 160px; height: auto; }
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,.12); margin-top: var(--space-7); padding-top: var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-2);
+  color: #8ea0cf; font-size: var(--fs-xs); font-weight: var(--fw-bold);
+  text-transform: uppercase; letter-spacing: .1em;
+}
+@media (min-width: 768px) { .footer-bottom { flex-direction: row; justify-content: space-between; } }
+@media (max-width: 1024px) {
+  .footer-cols { grid-template-columns: 1fr 1fr; }
+  .footer-col-brand { grid-column: 1 / -1; }
+  .footer-col-pmark { display: none; }
+}
+@media (max-width: 768px) { .footer-cols { grid-template-columns: 1fr; } .footer-col { max-width: 420px; } }
+
+/* ========================================================================== */
+/* ===== PAGE SECTIONS (contact) =========================================== */
+/* ========================================================================== */
+
+/* "Ping Us!" — sky band, one blue swoosh behind, form (left) + Reach Out (right) */
+.ping-contact { background: var(--sky); padding: var(--section-y) 0; }
+.ping-contact h1 { color: var(--brand-blue); font-size: var(--fs-h1); font-weight: var(--fw-semibold); line-height: var(--lh-tight); margin: 0 0 var(--space-4); }
+.ping-contact .lede { color: var(--brand-blue); font-size: var(--fs-lead); line-height: var(--lh-body); max-width: 620px; margin: 0 0 var(--space-7); }
+.ping-contact-cols { display: flex; gap: var(--space-9); align-items: flex-start; }
+
+/* Form on the left */
+.ping-form { display: flex; flex-direction: column; gap: var(--space-5); max-width: 720px; flex: 1 1 0; min-width: 0; }
+.ping-field input, .ping-field textarea {
+  width: 100%; background: #fff; border: none; border-radius: 20px;
+  padding: var(--space-5) var(--space-6); font-size: var(--fs-body); font-weight: var(--fw-regular);
+  color: var(--brand-blue); font-family: inherit; outline: none;
+  box-shadow: 0 2px 8px rgba(15,45,150,.06);
+  transition: box-shadow var(--motion-fast, .2s) ease;
+}
+.ping-field input::placeholder, .ping-field textarea::placeholder { color: var(--brand-blue); opacity: .85; }
+.ping-field textarea { resize: vertical; min-height: 150px; }
+.ping-field input:focus, .ping-field textarea:focus { box-shadow: 0 0 0 3px rgba(242,111,76,.45); }
+.ping-form-actions { display: flex; justify-content: flex-end; }
+.ping-submit {
+  background: var(--orange); color: #fff; border: none; border-radius: 999px;
+  padding: calc(var(--space-4) - 1px) calc(var(--space-8) + 4px);
+  font-size: var(--pill-font); font-weight: var(--fw-medium); cursor: pointer;
+  font-family: inherit; transition: background .2s;
+}
+.ping-submit:hover { background: var(--orange-hover); }
+
+/* Reach Out sidebar on the right */
+.ping-reachout { flex: 0 0 320px; }
+.ping-reachout-title { color: var(--brand-blue); font-size: var(--fs-h3); font-weight: var(--fw-semibold); line-height: var(--lh-tight); margin: 0 0 var(--space-6); }
+.ping-reachout-item { display: flex; align-items: flex-start; gap: var(--space-4); margin-bottom: var(--space-5); }
+.ping-reachout-icon { color: var(--orange); width: 26px; height: 26px; flex-shrink: 0; margin-top: 2px; }
+.ping-reachout-label { color: var(--brand-blue); font-weight: var(--fw-semibold); font-size: var(--fs-body); margin: 0 0 2px; }
+.ping-reachout-value { color: var(--brand-blue); font-size: var(--fs-body); opacity: .85; text-decoration: none; }
+a.ping-reachout-value:hover { text-decoration: underline; }
+.ping-reachout-socials { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-6); }
+.ping-social { width: 42px; height: 42px; border-radius: 999px; background: var(--brand-blue); color: #fff; display: inline-flex; align-items: center; justify-content: center; transition: background .2s; }
+.ping-social:hover { background: var(--orange); }
+.ping-social svg { width: 20px; height: 20px; display: block; }
+
+@media (max-width: 860px) {
+  .ping-contact-cols { flex-direction: column; }
+  .ping-form { width: 100%; max-width: none; }
+  .ping-reachout { flex-basis: auto; width: 100%; max-width: 620px; }
+}
+@media (max-width: 768px) {
+  .ping-field input, .ping-field textarea { padding: 10px 20px; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============================ SHARED SHELL: HEADER ======================= -->
+<input type="checkbox" id="navcb" class="nav-cb" />
+<header class="site-header">
+  <div class="container-custom nav-row">
+    <a href="home.html" class="navbar-brand" aria-label="PING Network home">
+      <!-- Header wordmark: blue letters + orange dot -->
+      <svg class="header-logo" viewBox="0 0 170 77" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ping Network">
+        <path d="M20.5806 76.6514V66.5298H23.4017L27.3498 72.0967V66.5298H30.0238V76.6514H27.3498L23.2581 70.8799V76.6514H20.5842H20.5806Z" fill="#4295F8"/>
+        <path d="M36.0967 76.6514V66.5298H42.8803V68.9884H38.7742V70.3918H42.1014V72.7786H38.7742V74.1964H42.9808V76.655H36.0967V76.6514Z" fill="#4295F8"/>
+        <path d="M51.1498 76.6514V68.9884H48.2856V66.5298H56.6737V68.9884H53.8238V76.6514H51.1498Z" fill="#4295F8"/>
+        <path d="M64.2686 76.6514L61.3613 66.5298H64.0927L65.6971 72.531L67.2153 66.5298H69.875L71.4363 72.373L72.9976 66.5298H75.7326L72.8253 76.6514H70.0472L68.5434 70.6646L67.0395 76.6514H64.2614H64.2686Z" fill="#4295F8"/>
+        <path d="M85.958 76.8273C84.8956 76.8273 83.9588 76.6047 83.144 76.1561C82.3293 75.7074 81.6904 75.0901 81.2274 74.3041C80.7644 73.518 80.5347 72.6207 80.5347 71.6085C80.5347 70.5964 80.768 69.6811 81.2274 68.8987C81.6904 68.1126 82.3257 67.4953 83.1369 67.0466C83.948 66.598 84.8776 66.3755 85.9293 66.3755C86.9809 66.3755 87.9249 66.598 88.736 67.0466C89.5472 67.4953 90.1825 68.1126 90.6455 68.8987C91.1085 69.6847 91.3382 70.5892 91.3382 71.6085C91.3382 72.6279 91.1085 73.5216 90.6527 74.3041C90.1933 75.0901 89.5616 75.7074 88.7504 76.1561C87.9392 76.6047 87.0096 76.8273 85.958 76.8273ZM85.958 74.3687C86.4784 74.3687 86.9378 74.2502 87.3327 74.0133C87.7275 73.7764 88.0361 73.4534 88.2587 73.0371C88.4812 72.6243 88.5925 72.1469 88.5925 71.605C88.5925 71.063 88.4776 70.5856 88.2515 70.1657C88.0254 69.7457 87.7131 69.4191 87.3111 69.1822C86.9091 68.9453 86.4497 68.8269 85.9293 68.8269C85.4088 68.8269 84.9638 68.9453 84.5618 69.1822C84.1634 69.4191 83.8475 69.7457 83.6214 70.1657C83.3953 70.5856 83.2804 71.063 83.2804 71.605C83.2804 72.1469 83.3953 72.6207 83.6286 73.0371C83.8583 73.4534 84.1741 73.7764 84.5761 74.0133C84.9745 74.2502 85.4375 74.3687 85.958 74.3687Z" fill="#4295F8"/>
+        <path d="M96.9054 76.6514V66.5298H101.098C101.859 66.5298 102.533 66.6769 103.122 66.9713C103.711 67.2656 104.17 67.6712 104.504 68.1844C104.838 68.7013 105.003 69.2971 105.003 69.9719C105.003 70.6466 104.838 71.2281 104.511 71.7521C104.184 72.2725 103.739 72.6781 103.179 72.9653L105.405 76.6514H102.34L100.516 73.4426H99.5758V76.6514H96.9019H96.9054ZM99.5794 70.984H100.954C101.195 70.984 101.406 70.9409 101.589 70.8548C101.772 70.7687 101.916 70.6466 102.024 70.4923C102.131 70.338 102.182 70.1657 102.182 69.9719C102.182 69.6811 102.067 69.4442 101.841 69.2576C101.614 69.071 101.317 68.9741 100.95 68.9741H99.5758V70.984H99.5794Z" fill="#4295F8"/>
+        <path d="M110.832 76.6514V66.5298H113.506V69.9001L116.556 66.5298H120.07L115.864 71.0989L120.203 76.6514H116.876L114.098 73.0083L113.506 73.658V76.6514H110.832Z" fill="#4295F8"/>
+        <path d="M130.023 72.05L134.198 64.0999C139.176 66.8169 144.52 68.4357 150.087 67.6604C158.077 66.5477 160.797 60.0082 160.133 52.198C156.085 57.2086 150.266 60.0154 143.842 59.5811C135.831 59.0427 129.252 54.1147 126.552 46.5414C124.367 40.4075 124.937 33.8212 127.719 27.9206C131.089 20.7708 138.095 16.7114 146.042 16.977C151.566 17.1637 156.196 19.7946 159.982 24.2165L160.18 18.1902H169.996C169.961 24.8661 169.203 31.2801 167.566 37.773C170.556 47.7438 171.769 60.2917 165.381 68.7085C161.881 73.3206 156.734 75.8043 150.956 76.5509C143.741 77.4482 136.577 75.8402 130.023 72.0464V72.05ZM158.421 38.0816C157.427 34.0904 154.828 30.4976 151.408 28.2902C146.957 25.4189 141.48 26.2803 138.174 30.3146C135.619 33.4336 134.621 37.5468 135.482 41.4986C136.376 45.6082 139.542 48.6088 143.199 49.603C150.536 51.5986 156.605 45.5903 158.421 38.0816Z" fill="#4295F8"/>
+        <path d="M101.88 26.7074C88.8297 26.9335 89.2425 47.5105 89.4004 58.4325L79.6377 58.4181V18.1938H89.4865L89.6193 25.7527C93.9192 17.6518 104.077 14.5507 112.023 19.2885C116.786 22.1275 119.23 27.156 119.715 32.6583L119.729 58.4289L110.071 58.4361L110.017 34.6144C110.006 29.9449 106.32 26.632 101.88 26.7074Z" fill="#4295F8"/>
+        <path d="M71.1674 18.4378H60.9561V58.4361H71.1674V18.4378Z" fill="#4295F8"/>
+        <path d="M66.0024 12.8709C69.5626 12.8709 72.4486 9.98969 72.4486 6.43547C72.4486 2.88126 69.5626 0 66.0024 0C62.4422 0 59.5562 2.88126 59.5562 6.43547C59.5562 9.98969 62.4422 12.8709 66.0024 12.8709Z" fill="#FF6A4D"/>
+        <path d="M20.7708 58.4397L14.985 39.363L0 29.7511L3.49231 20.6344L13.3627 28.0139C13.2586 20.3473 15.0855 12.8889 20.8929 7.62351C27.4683 1.6654 37.1556 0.631706 45.1668 4.21375C51.2936 6.95232 54.9223 12.5443 55.5575 19.1054C56.4046 27.8739 51.8894 35.641 43.9931 39.4132C38.3795 42.0944 32.6763 42.6902 25.828 41.8719L31.0288 58.4002L20.7708 58.4433V58.4397ZM45.4862 23.7678C46.3153 20.0386 45.6298 16.3058 42.8481 13.6462C39.9696 10.8969 35.8671 10.3549 31.8795 11.604C24.0621 14.0482 22.0522 24.238 23.7571 32.565C32.9885 35.0272 43.5731 32.3891 45.4862 23.7678Z" fill="#4295F8"/>
+      </svg>
+    </a>
+
+    <div class="navbar-collapse">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a href="home.html" class="nav-link">Home</a></li>
+        <li class="nav-item"><a href="about.html" class="nav-link">About Us</a></li>
+        <li class="nav-item"><a href="brands.html" class="nav-link">Brands</a></li>
+        <li class="nav-item"><a href="platforms.html" class="nav-link">Platforms</a></li>
+        <li class="nav-item"><a href="publishing.html" class="nav-link">Publishing</a></li>
+        <li class="nav-item"><a href="contact.html" class="nav-link is-active">Contact</a></li>
+      </ul>
+    </div>
+
+    <div class="header-actions">
+      <a href="contact.html" class="btn-signin">Join Our Network</a>
+      <label for="navcb" class="hamburger" aria-label="Toggle navigation">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+      </label>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- CONTACT — "Ping Us!" ------------------------------------------------- -->
+  <section class="ping-contact has-curve">
+    <!-- contact swoosh: one blue stroke, span-x, anchored top.
+         (x remapped from the 1138-wide design into a 1440-wide space so the
+         stroke weight matches every other curve on the site.) -->
+    <svg class="curve curve--blue curve--x-top" viewBox="0 0 1440 804" preserveAspectRatio="xMidYMin slice" aria-hidden="true">
+      <path d="M0.36 478.1 C0.36 478.1, 636.21 938.3, 1161.34 0.4" />
+    </svg>
+    <div class="container-custom ping-contact-inner">
+      <h1>Ping Us!</h1>
+      <p class="lede">Simply submit the contact form and our sales team will get in touch within a business day. They can walk you through:</p>
+
+      <div class="ping-contact-cols">
+        <!-- Visual mock only — Submit does nothing (a static file can't POST). -->
+        <form class="ping-form" onsubmit="return false">
+          <div class="ping-field"><input type="text" placeholder="First Name:" aria-label="First Name" /></div>
+          <div class="ping-field"><input type="text" placeholder="Last Name:" aria-label="Last Name" /></div>
+          <div class="ping-field"><input type="email" placeholder="Company Email:" aria-label="Company Email" /></div>
+          <div class="ping-field"><input type="tel" placeholder="Phone Number:" aria-label="Phone Number" /></div>
+          <div class="ping-field"><textarea rows="4" placeholder="What would you like to discuss?" aria-label="What would you like to discuss?"></textarea></div>
+          <div class="ping-field"><textarea rows="4" placeholder="How can our team help you?" aria-label="How can our team help you?"></textarea></div>
+          <div class="ping-form-actions">
+            <button type="submit" class="ping-submit">Submit</button>
+          </div>
+        </form>
+
+        <aside class="ping-reachout">
+          <h2 class="ping-reachout-title">Reach Out</h2>
+
+          <div class="ping-reachout-item">
+            <svg class="ping-reachout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2.5" />
+              <path d="M3.5 7.5 12 13l8.5-5.5" />
+            </svg>
+            <div>
+              <p class="ping-reachout-label">Email Us</p>
+              <a class="ping-reachout-value" href="mailto:hello@pingnetwork.in">hello@pingnetwork.in</a>
+            </div>
+          </div>
+
+          <div class="ping-reachout-item">
+            <svg class="ping-reachout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 21.5S18.5 15.7 18.5 11a6.5 6.5 0 1 0-13 0c0 4.7 6.5 10.5 6.5 10.5Z" />
+              <circle cx="12" cy="10.5" r="2.5" />
+            </svg>
+            <div>
+              <p class="ping-reachout-label">Our Studio</p>
+              <p class="ping-reachout-value">Mumbai, India</p>
+            </div>
+          </div>
+
+          <div class="ping-reachout-socials">
+            <a href="#" class="ping-social" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg></a>
+            <a href="#" class="ping-social" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+            <a href="#" class="ping-social" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+            <a href="#" class="ping-social" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+            <a href="#" class="ping-social" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zM8.339 18.337V9.925H5.552v8.412h2.787zM6.945 8.777a1.615 1.615 0 1 0 0-3.23 1.615 1.615 0 0 0 0 3.23zm11.395 9.56v-4.615c0-2.42-.517-4.28-3.343-4.28-1.36 0-2.272.745-2.647 1.45h-.038V9.925H9.635v8.412h2.786v-4.164c0-1.098.208-2.16 1.567-2.16 1.34 0 1.358 1.253 1.358 2.23v4.094h2.994z"/></svg></a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================ SHARED SHELL: FOOTER ======================= -->
+<footer class="site-footer">
+  <div class="container-custom">
+    <div class="footer-cols">
+      <!-- A · Brand -->
+      <div class="footer-col footer-col-brand">
+        <svg class="footer-logo" viewBox="0 0 170 77" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ping Network">
+          <path d="M20.5806 76.6514V66.5298H23.4017L27.3498 72.0967V66.5298H30.0238V76.6514H27.3498L23.2581 70.8799V76.6514H20.5842H20.5806Z" fill="#fff"/>
+          <path d="M36.0967 76.6514V66.5298H42.8803V68.9884H38.7742V70.3918H42.1014V72.7786H38.7742V74.1964H42.9808V76.655H36.0967V76.6514Z" fill="#fff"/>
+          <path d="M51.1498 76.6514V68.9884H48.2856V66.5298H56.6737V68.9884H53.8238V76.6514H51.1498Z" fill="#fff"/>
+          <path d="M64.2686 76.6514L61.3613 66.5298H64.0927L65.6971 72.531L67.2153 66.5298H69.875L71.4363 72.373L72.9976 66.5298H75.7326L72.8253 76.6514H70.0472L68.5434 70.6646L67.0395 76.6514H64.2614H64.2686Z" fill="#fff"/>
+          <path d="M85.958 76.8273C84.8956 76.8273 83.9588 76.6047 83.144 76.1561C82.3293 75.7074 81.6904 75.0901 81.2274 74.3041C80.7644 73.518 80.5347 72.6207 80.5347 71.6085C80.5347 70.5964 80.768 69.6811 81.2274 68.8987C81.6904 68.1126 82.3257 67.4953 83.1369 67.0466C83.948 66.598 84.8776 66.3755 85.9293 66.3755C86.9809 66.3755 87.9249 66.598 88.736 67.0466C89.5472 67.4953 90.1825 68.1126 90.6455 68.8987C91.1085 69.6847 91.3382 70.5892 91.3382 71.6085C91.3382 72.6279 91.1085 73.5216 90.6527 74.3041C90.1933 75.0901 89.5616 75.7074 88.7504 76.1561C87.9392 76.6047 87.0096 76.8273 85.958 76.8273ZM85.958 74.3687C86.4784 74.3687 86.9378 74.2502 87.3327 74.0133C87.7275 73.7764 88.0361 73.4534 88.2587 73.0371C88.4812 72.6243 88.5925 72.1469 88.5925 71.605C88.5925 71.063 88.4776 70.5856 88.2515 70.1657C88.0254 69.7457 87.7131 69.4191 87.3111 69.1822C86.9091 68.9453 86.4497 68.8269 85.9293 68.8269C85.4088 68.8269 84.9638 68.9453 84.5618 69.1822C84.1634 69.4191 83.8475 69.7457 83.6214 70.1657C83.3953 70.5856 83.2804 71.063 83.2804 71.605C83.2804 72.1469 83.3953 72.6207 83.6286 73.0371C83.8583 73.4534 84.1741 73.7764 84.5761 74.0133C84.9745 74.2502 85.4375 74.3687 85.958 74.3687Z" fill="#fff"/>
+          <path d="M96.9054 76.6514V66.5298H101.098C101.859 66.5298 102.533 66.6769 103.122 66.9713C103.711 67.2656 104.17 67.6712 104.504 68.1844C104.838 68.7013 105.003 69.2971 105.003 69.9719C105.003 70.6466 104.838 71.2281 104.511 71.7521C104.184 72.2725 103.739 72.6781 103.179 72.9653L105.405 76.6514H102.34L100.516 73.4426H99.5758V76.6514H96.9019H96.9054ZM99.5794 70.984H100.954C101.195 70.984 101.406 70.9409 101.589 70.8548C101.772 70.7687 101.916 70.6466 102.024 70.4923C102.131 70.338 102.182 70.1657 102.182 69.9719C102.182 69.6811 102.067 69.4442 101.841 69.2576C101.614 69.071 101.317 68.9741 100.95 68.9741H99.5758V70.984H99.5794Z" fill="#fff"/>
+          <path d="M110.832 76.6514V66.5298H113.506V69.9001L116.556 66.5298H120.07L115.864 71.0989L120.203 76.6514H116.876L114.098 73.0083L113.506 73.658V76.6514H110.832Z" fill="#fff"/>
+          <path d="M130.023 72.05L134.198 64.0999C139.176 66.8169 144.52 68.4357 150.087 67.6604C158.077 66.5477 160.797 60.0082 160.133 52.198C156.085 57.2086 150.266 60.0154 143.842 59.5811C135.831 59.0427 129.252 54.1147 126.552 46.5414C124.367 40.4075 124.937 33.8212 127.719 27.9206C131.089 20.7708 138.095 16.7114 146.042 16.977C151.566 17.1637 156.196 19.7946 159.982 24.2165L160.18 18.1902H169.996C169.961 24.8661 169.203 31.2801 167.566 37.773C170.556 47.7438 171.769 60.2917 165.381 68.7085C161.881 73.3206 156.734 75.8043 150.956 76.5509C143.741 77.4482 136.577 75.8402 130.023 72.0464V72.05ZM158.421 38.0816C157.427 34.0904 154.828 30.4976 151.408 28.2902C146.957 25.4189 141.48 26.2803 138.174 30.3146C135.619 33.4336 134.621 37.5468 135.482 41.4986C136.376 45.6082 139.542 48.6088 143.199 49.603C150.536 51.5986 156.605 45.5903 158.421 38.0816Z" fill="#fff"/>
+          <path d="M101.88 26.7074C88.8297 26.9335 89.2425 47.5105 89.4004 58.4325L79.6377 58.4181V18.1938H89.4865L89.6193 25.7527C93.9192 17.6518 104.077 14.5507 112.023 19.2885C116.786 22.1275 119.23 27.156 119.715 32.6583L119.729 58.4289L110.071 58.4361L110.017 34.6144C110.006 29.9449 106.32 26.632 101.88 26.7074Z" fill="#fff"/>
+          <path d="M71.1674 18.4378H60.9561V58.4361H71.1674V18.4378Z" fill="#fff"/>
+          <path d="M66.0024 12.8709C69.5626 12.8709 72.4486 9.98969 72.4486 6.43547C72.4486 2.88126 69.5626 0 66.0024 0C62.4422 0 59.5562 2.88126 59.5562 6.43547C59.5562 9.98969 62.4422 12.8709 66.0024 12.8709Z" fill="#FF6A4D"/>
+          <path d="M20.7708 58.4397L14.985 39.363L0 29.7511L3.49231 20.6344L13.3627 28.0139C13.2586 20.3473 15.0855 12.8889 20.8929 7.62351C27.4683 1.6654 37.1556 0.631706 45.1668 4.21375C51.2936 6.95232 54.9223 12.5443 55.5575 19.1054C56.4046 27.8739 51.8894 35.641 43.9931 39.4132C38.3795 42.0944 32.6763 42.6902 25.828 41.8719L31.0288 58.4002L20.7708 58.4433V58.4397ZM45.4862 23.7678C46.3153 20.0386 45.6298 16.3058 42.8481 13.6462C39.9696 10.8969 35.8671 10.3549 31.8795 11.604C24.0621 14.0482 22.0522 24.238 23.7571 32.565C32.9885 35.0272 43.5731 32.3891 45.4862 23.7678Z" fill="#fff"/>
+        </svg>
+        <p class="footer-about">Ping Network India is a YouTube Multi Channel Network (MCN) which is dedicated to helping brands, creators and content owners maximize their reach and revenue on YouTube.</p>
+      </div>
+
+      <!-- B · Contact -->
+      <div class="footer-col footer-col-contact">
+        <h4 class="footer-heading">Contact Us</h4>
+        <p class="footer-contact-company">Ping Digital Broadcast Pvt. Ltd.</p>
+        <p class="footer-contact-address">319, Adhyaru Industrial Estate, Inside Sun-Mill Compound, Opposite Phoenix Mills, Lower Parel, Mumbai, Maharashtra 400013.</p>
+        <a class="footer-contact-link" href="mailto:partner.support@pingnetwork.in">partner.support@pingnetwork.in</a>
+        <p class="footer-cv-label">Send us your CV at</p>
+        <a class="footer-contact-link" href="mailto:jobs@pingnetwork.in">jobs@pingnetwork.in</a>
+      </div>
+
+      <!-- C · Quick Links + social -->
+      <div class="footer-col footer-col-links">
+        <h4 class="footer-heading">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="home.html">Home</a></li>
+          <li><a href="knowledge.html">Channels</a></li>
+          <li><a href="knowledge.html">Knowledge Centre</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+        <div class="footer-social-row">
+          <a href="#" class="social-icon" aria-label="Facebook"><svg class="icon-social" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg></a>
+          <a href="#" class="social-icon" aria-label="Twitter"><svg class="icon-social" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg></a>
+          <a href="#" class="social-icon" aria-label="LinkedIn"><svg class="icon-social" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14zM8.339 18.337V9.925H5.552v8.412h2.787zM6.945 8.777a1.615 1.615 0 100-3.23 1.615 1.615 0 000 3.23zm11.395 9.56v-4.615c0-2.42-.517-4.28-3.343-4.28-1.36 0-2.272.745-2.647 1.45h-.038V9.925H9.635v8.412h2.786v-4.164c0-1.098.208-2.16 1.567-2.16 1.34 0 1.358 1.253 1.358 2.23v4.094h2.994z"/></svg></a>
+          <a href="#" class="social-icon" aria-label="Instagram"><svg class="icon-social" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+          <a href="#" class="social-icon" aria-label="YouTube"><svg class="icon-social" fill="none" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M10.2 9.3l4.8 2.7-4.8 2.7z" fill="currentColor"/></svg></a>
+        </div>
+      </div>
+
+      <!-- D · Brand mark -->
+      <div class="footer-col footer-col-pmark">
+        <svg class="footer-pmark" viewBox="0 0 193 156.117" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M56.6627 153.28L40.8787 101.339L0 75.1673L9.52945 50.3431L36.4557 70.436C36.1714 49.5573 41.1576 29.2516 57.0017 14.9213C74.9344 -1.30797 101.358 -4.12382 123.21 5.62249C139.929 13.0768 149.825 28.3075 151.558 46.1684C153.871 70.0485 141.553 91.1892 120.006 101.459C104.693 108.761 89.1328 110.387 70.4567 108.155L84.6388 153.16L56.6573 153.274L56.6627 153.28ZM124.085 58.8725C126.343 48.7223 124.473 38.5504 116.89 31.3198C109.039 23.8327 97.8477 22.3593 86.9733 25.7536C65.6509 32.4112 60.1673 60.1549 64.8144 82.8235C90.0021 89.5302 118.869 82.3433 124.091 58.8725H124.085Z" fill="#fff"/>
+          <path d="M162.864 108.368H189.364V4.77619H162.864V108.368Z" fill="#fff"/>
+          <path d="M176.276 156.117C185.512 156.117 193 148.655 193 139.451C193 130.247 185.512 122.785 176.276 122.785C167.039 122.785 159.551 130.247 159.551 139.451C159.551 148.655 167.039 156.117 176.276 156.117Z" fill="#FF6A4D"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2025 Ping Digital Broadcast Pvt. Ltd. All rights reserved.</span>
+      <span>partner.support@pingnetwork.in</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

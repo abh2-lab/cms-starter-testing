@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PING Network — PING Shield (design reference)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ========================================================================== */
+/* ===== SHARED SHELL — copy verbatim into every page ======================= */
+/* ========================================================================== */
+
+:root {
+  /* Brand palette */
+  --bg: #faf7f4;
+  --brand-blue: #0f2d96;   /* deep blue — text, navy bands, footer */
+  --brand-mid: #4295f8;    /* medium blue — hero band, accents */
+  --sky: #92deff;          /* light blue — bands + most curves */
+  --orange: #ff6a4d;       /* accent — pills, stats, orange band */
+  --orange-hover: #e0532f;
+  --muted: #5b6aa0;
+
+  /* Curve system (documentation — the shared weight lives on each <svg>) */
+  --curve-base: 1440;
+  --curve-thickness: 130;
+
+  /* Layout */
+  --container: 1200px;
+  --gutter: 24px;
+  --header-h: 100px;
+
+  /* Type scale — fluid + proportional, copied from the live theme tokens */
+  --fs-display: calc(clamp(57.6px, 42.873px + 4.602vw, 90px) - 16px);
+  --fs-h1: clamp(32px, 23.818px + 2.557vw, 50px);
+  --fs-h2: clamp(24.32px, 18.102px + 1.943vw, 38px);
+  --fs-h3: clamp(19.2px, 14.291px + 1.534vw, 30px);
+  --fs-h4: clamp(18px, 10.48px + 1.125vw, 22px);
+  --fs-lead: clamp(17px, 9.527px + 1.023vw, 20px);
+  --fs-body: clamp(17px, 8.575px + 0.92vw, 18px);
+  --fs-sm: 16px;
+  --fs-xs: 14px;
+
+  --lh-tight: 1.15;
+  --lh-snug: 1.3;
+  --lh-body: 1.55;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* Spacing (8px base) */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 40px; --space-8: 48px;
+  --space-9: 64px; --space-10: 80px; --space-12: 96px;
+
+  --section-y: clamp(48px, 33.455px + 4.545vw, 80px);
+  --pill-font: calc(var(--fs-sm) + 1px);
+  --pill-pad-y: calc(var(--space-3) - 1px);
+  --pill-pad-x: calc(var(--space-8) + 4px);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--brand-blue);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+img { max-width: 100%; height: auto; display: block; }
+a { color: var(--orange); }
+
+.container-custom {
+  width: min(100% - (var(--gutter) * 2), var(--container));
+  margin-inline: auto;
+}
+
+/* ---- Pill CTAs (shared) --------------------------------------------------- */
+.pill {
+  display: inline-flex; align-items: center;
+  border-radius: 999px;
+  padding: var(--pill-pad-y) var(--pill-pad-x);
+  font-size: var(--pill-font); font-weight: var(--fw-semibold);
+  text-decoration: none; border: 2px solid transparent;
+  transition: background .2s, color .2s;
+}
+.pill--orange { background: var(--orange); color: #fff; }
+.pill--orange:hover { background: var(--orange-hover); }
+
+/* ---- Curve layer ---------------------------------------------------------- */
+/* The section that hosts a curve gets .has-curve; the curve <svg> is absolutely
+   placed behind the content. Weight is the SHARED 130 units set on each <svg>. */
+.has-curve { position: relative; overflow: hidden; }
+.has-curve > .container-custom,
+.has-curve > .inner { position: relative; z-index: 1; }
+.curve { position: absolute; pointer-events: none; z-index: 0; }
+/* span-x, anchored bottom (crests / hero swooshes running off the bottom) */
+.curve--x-bottom { left: 0; right: 0; bottom: 0; width: 100%; height: auto; }
+/* span-x, anchored top (page-spanning ribbons that fall away downward) */
+.curve--x-top { left: 0; right: 0; top: 0; width: 100%; height: auto; }
+/* span-y, anchored to a side (side bands / vertical sweeps) */
+.curve--y-right { top: 0; bottom: 0; right: 0; height: 100%; width: auto; }
+.curve--y-left  { top: 0; bottom: 0; left: 0;  height: 100%; width: auto; }
+.curve path { fill: none; stroke-width: 130; stroke-linecap: round; stroke-linejoin: round; }
+.curve--sky path    { stroke: #92deff; }
+.curve--orange path { stroke: #ff6a4d; }
+.curve--blue path   { stroke: #4295f8; }
+
+/* ========================================================================== */
+/* ===== SITE HEADER (SHARED SHELL) ========================================= */
+/* ========================================================================== */
+.nav-cb { display: none; }
+.site-header {
+  background: #fff;
+  border-bottom: 1px solid rgba(15,45,150,.08);
+  height: var(--header-h);
+  position: sticky; top: 0; z-index: 1000;
+}
+.nav-row {
+  height: 100%;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  gap: var(--space-7);
+}
+.navbar-brand { justify-self: start; display: inline-flex; align-items: center; line-height: 0; }
+.header-logo { height: 46px; width: auto; max-width: none; }
+.navbar-collapse { display: flex; justify-content: center; }
+.navbar-nav { display: flex; align-items: center; gap: var(--space-6); list-style: none; }
+.nav-link {
+  color: var(--brand-blue); font-weight: var(--fw-bold); font-size: var(--fs-sm);
+  text-decoration: none; padding: var(--space-2) 0; transition: color .2s;
+}
+.nav-link:hover, .nav-link.is-active { color: var(--orange); }
+.header-actions { justify-self: end; display: flex; align-items: center; gap: var(--space-5); }
+.btn-signin {
+  background: var(--orange); color: #fff; font-weight: var(--fw-regular);
+  font-size: var(--pill-font); padding: var(--pill-pad-y) calc(var(--space-5) + 4px);
+  border-radius: 999px; text-decoration: none; transition: background .2s; white-space: nowrap;
+}
+.btn-signin:hover { background: var(--orange-hover); }
+.hamburger { display: none; background: none; border: none; color: var(--brand-blue); cursor: pointer; padding: 8px; }
+.hamburger svg { width: 26px; height: 26px; }
+
+@media (max-width: 1199px) {
+  .nav-row { grid-template-columns: auto 1fr; gap: var(--space-4); }
+  .hamburger { display: inline-flex; }
+  .navbar-collapse {
+    position: fixed; top: var(--header-h); bottom: 0; left: 0; width: 260px;
+    background: var(--bg); box-shadow: 4px 0 24px rgba(15,45,150,.12);
+    padding: var(--space-5); transform: translateX(-100%);
+    transition: transform .35s cubic-bezier(.22,.61,.36,1); z-index: 999;
+  }
+  .nav-cb:checked ~ .nav-row .navbar-collapse { transform: none; }
+  .navbar-nav { flex-direction: column; align-items: stretch; gap: 0; }
+  .nav-item { border-bottom: 1px solid rgba(15,45,150,.08); }
+  .nav-link { display: block; padding: var(--space-3) 0; }
+  .btn-signin { padding: 8px 22px; }
+}
+@media (max-width: 768px) { :root { --header-h: 68px; } .header-logo { height: 34px; } }
+
+/* ========================================================================== */
+/* ===== SITE FOOTER (SHARED SHELL) ========================================= */
+/* ========================================================================== */
+.site-footer { background: var(--brand-blue); padding: var(--section-y) 0 var(--space-6); }
+.footer-cols {
+  display: grid;
+  grid-template-columns: 1.75fr 1.75fr minmax(190px, 1fr) auto;
+  column-gap: var(--space-9); row-gap: var(--space-7); align-items: start;
+}
+.footer-col { min-width: 0; }
+.footer-logo { width: 137px; height: auto; margin-bottom: var(--space-5); }
+.footer-about, .footer-contact-company, .footer-contact-address,
+.footer-cv-label, .footer-links a, .footer-contact-link {
+  color: #fff; font-size: var(--fs-sm); line-height: var(--lh-body);
+}
+.footer-heading { color: #fff; font-weight: var(--fw-bold); font-size: var(--fs-h4); line-height: var(--lh-tight); margin: 0 0 var(--space-4); }
+.footer-contact-company { margin: 0 0 var(--space-1); }
+.footer-contact-address { margin: 0 0 var(--space-3); }
+.footer-contact-link { text-decoration: underline; display: inline-block; margin-bottom: var(--space-4); }
+.footer-contact-link:hover { color: var(--orange); }
+.footer-cv-label { margin: 0 0 var(--space-1); }
+.footer-links { list-style: none; }
+.footer-links a { text-decoration: none; display: inline-block; padding: 3px 0; }
+.footer-links a:hover { color: var(--orange); }
+.footer-social-row { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-7); }
+.social-icon { color: #fff; display: inline-flex; }
+.social-icon:hover { color: var(--orange); }
+.icon-social { width: 18px; height: 18px; }
+.footer-col-pmark { align-self: center; display: flex; justify-content: flex-end; }
+.footer-pmark { width: 160px; height: auto; }
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,.12); margin-top: var(--space-7); padding-top: var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-2);
+  color: #8ea0cf; font-size: var(--fs-xs); font-weight: var(--fw-bold);
+  text-transform: uppercase; letter-spacing: .1em;
+}
+@media (min-width: 768px) { .footer-bottom { flex-direction: row; justify-content: space-between; } }
+@media (max-width: 1024px) {
+  .footer-cols { grid-template-columns: 1fr 1fr; }
+  .footer-col-brand { grid-column: 1 / -1; }
+  .footer-col-pmark { display: none; }
+}
+@media (max-width: 768px) { .footer-cols { grid-template-columns: 1fr; } .footer-col { max-width: 420px; } }
+
+/* ========================================================================== */
+/* ===== PAGE SECTIONS (ping-shield) ========================================= */
+/* ========================================================================== */
+
+/* 1 · Shield hero — white band: brandmark + heading + CTAs left, emblem + 3 stats
+   right; navy badges band beneath (from BlockShieldHero.vue) */
+.sh { background: #ffffff; padding: var(--section-y) 0 0; }
+.sh-main { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--space-8); align-items: center; }
+.sh-logo { width: 300px; height: auto; display: block; margin: 0 0 var(--space-5); }
+.sh-heading { color: #0f2d96; font-size: var(--fs-h1); font-weight: var(--fw-bold); line-height: var(--lh-tight); max-width: 620px; margin: 0 0 var(--space-5); }
+.sh-subtext { color: #0f2d96; font-size: var(--fs-lead); line-height: var(--lh-body); max-width: 480px; margin: 0 0 var(--space-6); }
+.sh-ctas { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+.sh-cta { display: inline-flex; align-items: center; border-radius: 999px; padding: var(--pill-pad-y, calc(var(--space-3) - 1px)) var(--pill-pad-x, var(--space-6)); font-weight: var(--fw-semibold); font-size: var(--pill-font); text-decoration: none; transition: all .2s; }
+.sh-cta-primary { background: #ff6a4d; color: #fff; padding-inline: var(--pill-pad-x, calc(var(--space-6) + 4px)); }
+.sh-cta-primary:hover { background: #e0532f; }
+.sh-cta-blue { background: #92deff; color: #fff; }
+.sh-cta-blue:hover { background: #7fd3fa; }
+.sh-right { position: relative; min-height: 420px; }
+.sh-emblem { position: absolute; top: 50%; right: 4%; transform: translateY(-50%); width: 200px; height: auto; }
+.sh-stat { position: absolute; display: flex; flex-direction: column; }
+.sh-stat-value { color: #ff6a4d; font-size: var(--fs-h3); font-weight: var(--fw-bold); line-height: 1; }
+.sh-stat-label { color: #0f2d96; font-size: var(--fs-sm); font-weight: var(--fw-medium); margin-top: var(--space-1); }
+.sh-stat--0 { top: 0; right: 6%; text-align: right; align-items: flex-end; }
+.sh-stat--1 { top: 38%; left: 0; text-align: left; align-items: flex-start; }
+.sh-stat--2 { bottom: 4%; right: 12%; text-align: right; align-items: flex-end; }
+.sh-badges-band { background: #0f2d96; margin-top: var(--space-7); padding: var(--space-9) 0; }
+.sh-badges { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); }
+.sh-badge { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--space-4); color: #ffffff; font-size: var(--fs-h2); font-weight: var(--fw-bold); line-height: var(--lh-snug); }
+.sh-check { width: 40px; height: 40px; flex-shrink: 0; }
+@media (max-width: 768px) {
+  .sh-main { grid-template-columns: 1fr; gap: var(--space-5); }
+  .sh-right { min-height: 360px; }
+  .sh-badges { grid-template-columns: 1fr; gap: var(--space-5); }
+}
+
+/* 2 · How it works — white/sky split, decorative orange accent behind the
+   numbered items (from BlockShieldHow.vue) */
+.hw { position: relative; overflow: hidden; background: linear-gradient(to right, #ffffff 0 50%, #92deff 50% 100%); }
+.hw-curve { position: absolute; top: 0; right: 0; width: 50%; height: 100%; z-index: 0; pointer-events: none; }
+.hw-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: 540px; }
+.hw-left { display: flex; flex-direction: column; justify-content: center; padding: var(--space-9) var(--space-8) var(--space-9) 0; }
+.hw-kicker { color: #0f2d96; font-size: calc(var(--fs-h2) - 4px); font-weight: var(--fw-bold); margin: 0 0 var(--space-5); }
+.hw-heading { color: #0f2d96; font-size: var(--fs-h2); font-weight: var(--fw-bold); line-height: var(--lh-tight); margin: 0 0 var(--space-5); max-width: 480px; }
+.hw-body { color: #0f2d96; font-size: var(--fs-body); line-height: var(--lh-body); margin: 0 0 var(--space-6); max-width: 460px; }
+.hw-plus { position: relative; width: 42px; height: 42px; border: 2px solid #0f2d96; border-radius: 50%; display: inline-block; }
+.hw-plus::before, .hw-plus::after { content: ''; position: absolute; background: #0f2d96; }
+.hw-plus::before { top: 50%; left: 11px; right: 11px; height: 2px; transform: translateY(-50%); }
+.hw-plus::after { left: 50%; top: 11px; bottom: 11px; width: 2px; transform: translateX(-50%); }
+.hw-right { display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: var(--space-9) var(--space-5) var(--space-9) var(--space-9); }
+.hw-item { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.hw-num { color: #0f2d96; font-size: calc(var(--fs-display) + 16px); font-weight: var(--fw-bold); line-height: 1; }
+.hw-item-title { color: #0f2d96; font-size: calc(var(--fs-h3) - 2px); font-weight: var(--fw-bold); line-height: var(--lh-snug); margin-top: var(--space-4); }
+@media (max-width: 768px) {
+  .hw { background: #92deff; }
+  .hw-curve { display: none; }
+  .hw-inner { grid-template-columns: 1fr; min-height: 0; }
+  .hw-left { background: #fff; margin: 0 calc(var(--gutter) * -1); padding: var(--space-8) var(--gutter); }
+  .hw-right { padding: var(--space-7) 0; gap: var(--space-7); }
+}
+
+/* 3 & 4 · Model panels — rendered twice (variant light / variant dark), sky page
+   band with a rounded card (from BlockShieldModel.vue) */
+.sm { background: #92deff; padding: var(--space-6) 0; }
+.sm-card { border-radius: 28px; padding: var(--space-8) var(--space-9); display: grid; grid-template-columns: 1.5fr 1fr; gap: var(--space-9); align-items: center; background: #4295f8; }
+.sm-number { color: #0f2d96; font-size: calc(var(--fs-h2) - 4px); font-weight: var(--fw-bold); margin: 0 0 var(--space-4); }
+.sm-title { color: #ffffff; font-size: var(--fs-h2); font-weight: var(--fw-bold); line-height: var(--lh-tight); margin: 0 0 var(--space-4); }
+.sm-desc { color: rgba(255, 255, 255, 0.92); font-size: var(--fs-body); line-height: var(--lh-body); margin: 0 0 var(--space-4); }
+.sm-hl { color: #0f2d96; font-weight: var(--fw-bold); }
+.sm-cta { display: inline-flex; align-items: center; background: #ff6a4d; color: #fff; border-radius: 999px; padding: var(--pill-pad-y, calc(var(--space-3) - 1px)) var(--pill-pad-x, calc(var(--space-6) + 4px)); font-weight: var(--fw-semibold); font-size: var(--pill-font); text-decoration: none; transition: background .2s; margin-top: var(--space-4); }
+.sm-cta:hover { background: #e0532f; }
+.sm-bullets { display: flex; flex-direction: column; gap: var(--space-5); }
+.sm-check { width: 40px; height: 40px; margin-bottom: var(--space-1); }
+.sm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-5); }
+.sm-list li { color: #ffffff; font-size: var(--fs-h3); font-weight: var(--fw-bold); line-height: var(--lh-snug); }
+/* The component's own comment documents variant colour (#4295F8 vs navy) but the
+   dark override isn't wired in its current <style> block. Added here so Model 01
+   (light) and Model 02 (dark) read as two distinct cards, matching that intent. */
+.sm--dark .sm-card { background: #0f2d96; }
+@media (max-width: 768px) {
+  .sm-card { grid-template-columns: 1fr; gap: var(--space-7); padding: var(--space-7) var(--space-6); }
+}
+
+/* 5 · Cost of piracy — white/navy split, bar chart (from BlockShieldCost.vue) */
+.sc { background: linear-gradient(to right, #ffffff 0 50%, #0f2d96 50% 100%); }
+.sc-inner { display: grid; grid-template-columns: 1fr 1fr; min-height: 520px; }
+.sc-left { display: flex; flex-direction: column; justify-content: center; padding: var(--space-9) var(--space-9) var(--space-9) 0; }
+.sc-eyebrow { color: #0f2d96; font-size: calc(var(--fs-h2) - 4px); font-weight: var(--fw-bold); margin: 0 0 var(--space-5); }
+.sc-heading { color: #0f2d96; font-size: var(--fs-h2); font-weight: var(--fw-bold); line-height: var(--lh-tight); margin: 0 0 var(--space-5); max-width: 440px; }
+.sc-body { color: #0f2d96; font-size: var(--fs-body); line-height: var(--lh-body); margin: 0 0 var(--space-6); max-width: 430px; }
+.sc-plus { position: relative; width: 42px; height: 42px; border: 2px solid #0f2d96; border-radius: 50%; display: inline-block; }
+.sc-plus::before, .sc-plus::after { content: ''; position: absolute; background: #0f2d96; }
+.sc-plus::before { top: 50%; left: 11px; right: 11px; height: 2px; transform: translateY(-50%); }
+.sc-plus::after { left: 50%; top: 11px; bottom: 11px; width: 2px; transform: translateX(-50%); }
+.sc-right { display: flex; flex-direction: column; padding: var(--space-6) var(--space-4) var(--space-4); }
+.sc-chart-title { color: #ffffff; font-size: var(--fs-h2); font-weight: var(--fw-bold); line-height: var(--lh-snug); margin: 0 0 var(--space-7); }
+.sc-bars { flex: 1; display: flex; align-items: stretch; gap: var(--space-4); padding: 0; }
+.sc-bar-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; container-type: inline-size; }
+.sc-bar-label { color: #ffffff; font-size: var(--fs-sm); font-weight: var(--fw-medium); text-align: center; line-height: var(--lh-snug); margin-bottom: var(--space-3); max-width: 100px; }
+.sc-bar { position: relative; width: 100%; background: #92deff; border-radius: 42cqw 42cqw 0 0; }
+.sc-bar-pct { position: absolute; top: calc(var(--space-2) + 20px); left: 0; right: 0; text-align: center; color: #ff6a4d; font-weight: var(--fw-bold); line-height: 1; padding: 0 0.5rem; font-size: 39cqw; }
+@media (max-width: 768px) {
+  .sc { background: #0f2d96; }
+  .sc-inner { grid-template-columns: 1fr; min-height: 0; }
+  .sc-left { background: #fff; margin: 0 calc(var(--gutter) * -1); padding: var(--space-8) var(--gutter); }
+  .sc-right { padding: var(--space-7) 0; }
+}
+
+/* 6 · Stats — 3-year track record, sky band (from BlockShieldStats.vue) */
+.ss { background: #92deff; padding: var(--section-y) 0; }
+.ss-eyebrow { color: #0f2d96; font-size: calc(var(--fs-h2) - 4px); font-weight: var(--fw-bold); margin: 0 0 var(--space-2); }
+.ss-title { color: #0f2d96; font-size: var(--fs-h2); font-weight: var(--fw-bold); line-height: var(--lh-tight); max-width: 600px; margin: 0 0 var(--space-4); }
+.ss-subtitle { color: #0f2d96; font-size: var(--fs-body); line-height: var(--lh-body); max-width: 560px; margin: 0 0 var(--space-8); }
+.ss-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-7); }
+.ss-row { display: grid; grid-template-columns: minmax(0, 55fr) minmax(0, 45fr); gap: var(--space-6); align-items: center; }
+.ss-value { color: #0f2d96; font-size: calc(var(--fs-display) + 16px); font-weight: var(--fw-bold); line-height: 1; }
+.ss-desc { color: #ffffff; font-size: calc(var(--fs-h3) - 2px); font-weight: var(--fw-medium); line-height: var(--lh-body); }
+.ss-row--accent .ss-value, .ss-row--accent .ss-desc { color: #ff6a4d; }
+@media (max-width: 768px) { .ss-row { grid-template-columns: 1fr; gap: var(--space-2); } }
+
+/* 7 · Insights — white head band + navy card band (from BlockShieldInsights.vue) */
+.si-head { background: #ffffff; padding: var(--space-9) 0 var(--space-8); }
+.si-title { color: #0f2d96; font-size: var(--fs-h2); font-weight: var(--fw-bold); line-height: var(--lh-tight); max-width: 620px; margin: 0 0 var(--space-5); }
+.si-explore { display: inline-flex; align-items: center; background: #92deff; color: #ffffff; border-radius: 999px; padding: var(--pill-pad-y, calc(var(--space-3) - 1px)) var(--pill-pad-x, var(--space-6)); font-size: var(--pill-font); font-weight: var(--fw-semibold); text-decoration: none; transition: background .2s; }
+.si-explore:hover { background: #7fd3fa; }
+.si-band { position: relative; background: #0f2d96; padding: var(--space-9) 0 var(--space-10); }
+.si-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-8); }
+.si-thumb { width: 100%; aspect-ratio: 16 / 9; border-radius: 20px; overflow: hidden; }
+.si-photo, .si-ph { width: 100%; height: 100%; display: block; object-fit: cover; }
+.si-card-title { color: #ffffff; font-size: var(--fs-h3); font-weight: var(--fw-bold); line-height: var(--lh-snug); margin: var(--space-5) 0 0; }
+.si-dot { position: absolute; right: 40px; bottom: 40px; width: 34px; height: 34px; border-radius: 50%; background: #ff6a4d; }
+@media (max-width: 768px) {
+  .si-head { padding: var(--space-8) 0 var(--space-6); }
+  .si-title { margin: 0 0 var(--space-5); }
+  .si-band { padding: var(--space-7) 0 var(--space-8); }
+  .si-grid { grid-template-columns: 1fr; gap: var(--space-6); }
+  .si-card-title { margin: var(--space-4) 0 0; }
+  .si-dot { right: 20px; bottom: 20px; width: 26px; height: 26px; }
+}
+
+/* 8 · FAQ — reused verbatim from home.html's .fq* pattern + <details> */
+.fq { background: #fff; padding: var(--section-y) 0; }
+.fq-inner { max-width: 800px; }
+.fq-title { color: var(--brand-blue); font-size: var(--fs-h2); font-weight: var(--fw-bold); text-align: center; margin: 0 0 var(--space-7); }
+.fq-list { list-style: none; border-top: 1px solid rgba(15,45,150,.1); }
+.fq-item { border-bottom: 1px solid rgba(15,45,150,.1); }
+.fq-q { display: flex; align-items: flex-start; gap: var(--space-3); width: 100%; cursor: pointer; padding: var(--space-4) 0; list-style: none; }
+.fq-q::-webkit-details-marker { display: none; }
+.fq-num { color: var(--brand-blue); font-size: var(--fs-body); font-weight: var(--fw-bold); flex-shrink: 0; }
+.fq-q-text { flex: 0 1 auto; color: var(--brand-blue); font-size: var(--fs-body); font-weight: var(--fw-medium); line-height: var(--lh-snug); }
+.fq-icon { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1.5px solid var(--brand-blue); border-radius: 50%; color: var(--brand-blue); flex-shrink: 0; margin-left: auto; position: relative; }
+.fq-icon::before, .fq-icon::after { content: ''; position: absolute; background: var(--brand-blue); border-radius: 2px; }
+.fq-icon::before { width: 12px; height: 2.4px; }
+.fq-icon::after { width: 2.4px; height: 12px; }
+.fq-item[open] .fq-icon::after { opacity: 0; }
+.fq-a { color: rgba(15,45,150,.7); font-size: var(--fs-body); line-height: var(--lh-body); padding: 0 0 var(--space-5); max-width: 680px; }
+
+/* 9 · Final CTA — blue band (from BlockShieldCta.vue) */
+.cta { background: #4295f8; padding: var(--section-y) 0; }
+.cta-inner { text-align: center; }
+.cta-heading { color: #ffffff; font-size: var(--fs-h1); font-weight: var(--fw-bold); line-height: var(--lh-tight); margin: 0 0 var(--space-4); }
+.cta-subtext { color: #ffffff; font-size: var(--fs-lead); line-height: var(--lh-body); max-width: 620px; margin: 0 auto var(--space-6); }
+.cta-btn { display: inline-flex; align-items: center; background: #ff6a4d; color: #fff; border-radius: 999px; padding: var(--pill-pad-y, calc(var(--space-3) - 1px)) var(--pill-pad-x, calc(var(--space-8) + 4px)); font-weight: var(--fw-semibold); font-size: var(--pill-font); text-decoration: none; transition: background .2s; }
+.cta-btn:hover { background: #e0532f; }
+</style>
+</head>
+
+<body>
+
+<!-- ============================ SHARED SHELL: HEADER ======================= -->
+<input type="checkbox" id="navcb" class="nav-cb" />
+<header class="site-header">
+  <div class="container-custom nav-row">
+    <a href="home.html" class="navbar-brand" aria-label="PING Network home">
+      <!-- Header wordmark: blue letters + orange dot -->
+      <svg class="header-logo" viewBox="0 0 170 77" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ping Network">
+        <path d="M20.5806 76.6514V66.5298H23.4017L27.3498 72.0967V66.5298H30.0238V76.6514H27.3498L23.2581 70.8799V76.6514H20.5842H20.5806Z" fill="#4295F8"/>
+        <path d="M36.0967 76.6514V66.5298H42.8803V68.9884H38.7742V70.3918H42.1014V72.7786H38.7742V74.1964H42.9808V76.655H36.0967V76.6514Z" fill="#4295F8"/>
+        <path d="M51.1498 76.6514V68.9884H48.2856V66.5298H56.6737V68.9884H53.8238V76.6514H51.1498Z" fill="#4295F8"/>
+        <path d="M64.2686 76.6514L61.3613 66.5298H64.0927L65.6971 72.531L67.2153 66.5298H69.875L71.4363 72.373L72.9976 66.5298H75.7326L72.8253 76.6514H70.0472L68.5434 70.6646L67.0395 76.6514H64.2614H64.2686Z" fill="#4295F8"/>
+        <path d="M85.958 76.8273C84.8956 76.8273 83.9588 76.6047 83.144 76.1561C82.3293 75.7074 81.6904 75.0901 81.2274 74.3041C80.7644 73.518 80.5347 72.6207 80.5347 71.6085C80.5347 70.5964 80.768 69.6811 81.2274 68.8987C81.6904 68.1126 82.3257 67.4953 83.1369 67.0466C83.948 66.598 84.8776 66.3755 85.9293 66.3755C86.9809 66.3755 87.9249 66.598 88.736 67.0466C89.5472 67.4953 90.1825 68.1126 90.6455 68.8987C91.1085 69.6847 91.3382 70.5892 91.3382 71.6085C91.3382 72.6279 91.1085 73.5216 90.6527 74.3041C90.1933 75.0901 89.5616 75.7074 88.7504 76.1561C87.9392 76.6047 87.0096 76.8273 85.958 76.8273ZM85.958 74.3687C86.4784 74.3687 86.9378 74.2502 87.3327 74.0133C87.7275 73.7764 88.0361 73.4534 88.2587 73.0371C88.4812 72.6243 88.5925 72.1469 88.5925 71.605C88.5925 71.063 88.4776 70.5856 88.2515 70.1657C88.0254 69.7457 87.7131 69.4191 87.3111 69.1822C86.9091 68.9453 86.4497 68.8269 85.9293 68.8269C85.4088 68.8269 84.9638 68.9453 84.5618 69.1822C84.1634 69.4191 83.8475 69.7457 83.6214 70.1657C83.3953 70.5856 83.2804 71.063 83.2804 71.605C83.2804 72.1469 83.3953 72.6207 83.6286 73.0371C83.8583 73.4534 84.1741 73.7764 84.5761 74.0133C84.9745 74.2502 85.4375 74.3687 85.958 74.3687Z" fill="#4295F8"/>
+        <path d="M96.9054 76.6514V66.5298H101.098C101.859 66.5298 102.533 66.6769 103.122 66.9713C103.711 67.2656 104.17 67.6712 104.504 68.1844C104.838 68.7013 105.003 69.2971 105.003 69.9719C105.003 70.6466 104.838 71.2281 104.511 71.7521C104.184 72.2725 103.739 72.6781 103.179 72.9653L105.405 76.6514H102.34L100.516 73.4426H99.5758V76.6514H96.9019H96.9054ZM99.5794 70.984H100.954C101.195 70.984 101.406 70.9409 101.589 70.8548C101.772 70.7687 101.916 70.6466 102.024 70.4923C102.131 70.338 102.182 70.1657 102.182 69.9719C102.182 69.6811 102.067 69.4442 101.841 69.2576C101.614 69.071 101.317 68.9741 100.95 68.9741H99.5758V70.984H99.5794Z" fill="#4295F8"/>
+        <path d="M110.832 76.6514V66.5298H113.506V69.9001L116.556 66.5298H120.07L115.864 71.0989L120.203 76.6514H116.876L114.098 73.0083L113.506 73.658V76.6514H110.832Z" fill="#4295F8"/>
+        <path d="M130.023 72.05L134.198 64.0999C139.176 66.8169 144.52 68.4357 150.087 67.6604C158.077 66.5477 160.797 60.0082 160.133 52.198C156.085 57.2086 150.266 60.0154 143.842 59.5811C135.831 59.0427 129.252 54.1147 126.552 46.5414C124.367 40.4075 124.937 33.8212 127.719 27.9206C131.089 20.7708 138.095 16.7114 146.042 16.977C151.566 17.1637 156.196 19.7946 159.982 24.2165L160.18 18.1902H169.996C169.961 24.8661 169.203 31.2801 167.566 37.773C170.556 47.7438 171.769 60.2917 165.381 68.7085C161.881 73.3206 156.734 75.8043 150.956 76.5509C143.741 77.4482 136.577 75.8402 130.023 72.0464V72.05ZM158.421 38.0816C157.427 34.0904 154.828 30.4976 151.408 28.2902C146.957 25.4189 141.48 26.2803 138.174 30.3146C135.619 33.4336 134.621 37.5468 135.482 41.4986C136.376 45.6082 139.542 48.6088 143.199 49.603C150.536 51.5986 156.605 45.5903 158.421 38.0816Z" fill="#4295F8"/>
+        <path d="M101.88 26.7074C88.8297 26.9335 89.2425 47.5105 89.4004 58.4325L79.6377 58.4181V18.1938H89.4865L89.6193 25.7527C93.9192 17.6518 104.077 14.5507 112.023 19.2885C116.786 22.1275 119.23 27.156 119.715 32.6583L119.729 58.4289L110.071 58.4361L110.017 34.6144C110.006 29.9449 106.32 26.632 101.88 26.7074Z" fill="#4295F8"/>
+        <path d="M71.1674 18.4378H60.9561V58.4361H71.1674V18.4378Z" fill="#4295F8"/>
+        <path d="M66.0024 12.8709C69.5626 12.8709 72.4486 9.98969 72.4486 6.43547C72.4486 2.88126 69.5626 0 66.0024 0C62.4422 0 59.5562 2.88126 59.5562 6.43547C59.5562 9.98969 62.4422 12.8709 66.0024 12.8709Z" fill="#FF6A4D"/>
+        <path d="M20.7708 58.4397L14.985 39.363L0 29.7511L3.49231 20.6344L13.3627 28.0139C13.2586 20.3473 15.0855 12.8889 20.8929 7.62351C27.4683 1.6654 37.1556 0.631706 45.1668 4.21375C51.2936 6.95232 54.9223 12.5443 55.5575 19.1054C56.4046 27.8739 51.8894 35.641 43.9931 39.4132C38.3795 42.0944 32.6763 42.6902 25.828 41.8719L31.0288 58.4002L20.7708 58.4433V58.4397ZM45.4862 23.7678C46.3153 20.0386 45.6298 16.3058 42.8481 13.6462C39.9696 10.8969 35.8671 10.3549 31.8795 11.604C24.0621 14.0482 22.0522 24.238 23.7571 32.565C32.9885 35.0272 43.5731 32.3891 45.4862 23.7678Z" fill="#4295F8"/>
+      </svg>
+    </a>
+
+    <div class="navbar-collapse">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a href="home.html" class="nav-link">Home</a></li>
+        <li class="nav-item"><a href="about.html" class="nav-link">About Us</a></li>
+        <li class="nav-item"><a href="brands.html" class="nav-link">Brands</a></li>
+        <li class="nav-item"><a href="platforms.html" class="nav-link">Platforms</a></li>
+        <li class="nav-item"><a href="publishing.html" class="nav-link">Publishing</a></li>
+        <li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
+      </ul>
+    </div>
+
+    <div class="header-actions">
+      <a href="contact.html" class="btn-signin">Join Our Network</a>
+      <label for="navcb" class="hamburger" aria-label="Toggle navigation">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+      </label>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1 · SHIELD HERO --------------------------------------------------------- -->
+  <section class="sh">
+    <div class="container-custom">
+      <div class="sh-main">
+        <div class="sh-left">
+          <!-- Ping Sheild brandmark (PING_SHEILD_BRANDMARK-02.svg) -->
+          <svg class="sh-logo" viewBox="0 0 762.83 151.56" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ping Sheild">
+            <ellipse fill="#ff5c40" cx="127.24" cy="15.91" rx="12.43" ry="12.4" />
+            <path fill="#78dfff" d="M250.66,142.41l8.05-15.33c9.6,5.24,19.9,8.36,30.63,6.87,15.4-2.14,20.65-14.75,19.37-29.81-7.81,9.66-19.02,15.07-31.41,14.24-15.45-1.04-28.13-10.54-33.33-25.14-4.21-11.83-3.11-24.52,2.25-35.9,6.49-13.79,20.01-21.61,35.32-21.1,10.65.36,19.57,5.43,26.87,13.96l.38-11.62h18.92c-.07,12.87-1.53,25.24-4.68,37.76,5.76,19.22,8.1,43.41-4.21,59.64-6.75,8.89-16.67,13.68-27.81,15.12-13.91,1.73-27.72-1.37-40.35-8.69ZM305.41,76.92c-1.91-7.7-6.93-14.62-13.52-18.87-8.58-5.53-19.14-3.87-25.51,3.9-4.93,6.02-6.85,13.95-5.19,21.56,1.72,7.93,7.83,13.71,14.88,15.63,14.14,3.85,25.84-7.73,29.35-22.21Z" />
+            <path fill="#78dfff" d="M196.41,54.99c-25.16.44-24.36,40.11-24.06,61.16l-18.82-.03V38.58s18.98,0,18.98,0l.26,14.57c8.29-15.61,27.87-21.59,43.19-12.46,9.18,5.47,13.89,15.16,14.83,25.78l.03,49.68h-18.62s-.1-45.91-.1-45.91c-.02-9.01-7.13-15.39-15.69-15.24Z" />
+            <rect fill="#78dfff" x="117.51" y="39.05" width="19.69" height="77.11" />
+            <path fill="#78dfff" d="M40.04,116.17l-11.15-36.78L0,60.86l6.73-17.58,19.03,14.23c-.2-14.78,3.32-29.16,14.52-39.31,12.67-11.49,31.35-13.48,46.79-6.58,11.81,5.28,18.81,16.06,20.03,28.71,1.64,16.91-7.07,31.88-22.3,39.15-10.82,5.17-21.82,6.32-35.02,4.74l10.02,31.86-19.77.08ZM87.69,49.33c1.6-7.19.27-14.39-5.09-19.51-5.55-5.3-13.46-6.34-21.14-3.94-15.07,4.71-18.94,24.36-15.66,40.41,17.8,4.75,38.2-.34,41.89-16.96Z" />
+            <path fill="#ff5c40" d="M352.96,91.17l16-11.18c7.77,15.53,20.04,20.66,31.84,20.66,13.05,0,20.81-6.37,20.81-13.67s-7.15-10.87-20.81-15.22c-21.9-6.83-41.47-12.27-41.47-34.48,0-19.1,16.93-31.06,39.61-31.06,17.4,0,30.91,7.46,41,24.7l-14.29,11.49c-5.75-12.43-15.84-18.95-28.27-18.95s-18.02,6.37-18.02,13.05c0,9.01,8.7,11.18,24.39,15.84,27.96,8.23,38.36,16,38.36,33.86s-15.38,31.84-42.4,31.84c-18.48,0-36.81-7.77-46.75-26.87Z" />
+            <path fill="#ff5c40" d="M468.98,0v51.57c4.66-8.08,12.43-14.29,25.47-14.29,15.38,0,30.29,9.94,30.29,32.15v47.06h-18.48v-41.31c0-11.34-4.35-20.66-16.93-20.66-11.34,0-20.04,8.08-20.35,22.83v39.14h-18.48V0h18.48Z" />
+            <path fill="#ff5c40" d="M532.66,77.35c0-24.85,19.73-40.07,41.16-40.07s39.3,15.69,39.3,37.12c0,2.48-.31,6.06-.78,8.39h-60.42c2.02,10.1,10.56,18.17,23.14,18.17,9.79,0,17.08-3.57,22.06-11.8l13.51,10.87c-9.94,13.98-21.75,18.02-36.97,18.02-21.43,0-41-15.84-41-40.69ZM551.45,70.83h43.33c-.47-9.01-7.92-18.17-20.97-18.17-11.03,0-20.66,7.46-22.37,18.17Z" />
+            <path fill="#ff5c40" d="M630.66,2.48c7.3,0,11.96,5.28,11.96,11.8s-4.66,11.96-11.96,11.96-11.8-5.28-11.8-11.96,4.66-11.8,11.8-11.8ZM639.98,38.83v77.66h-18.48V38.83h18.48Z" />
+            <path fill="#ff5c40" d="M670.89,0v116.49h-18.48V0h18.48Z" />
+            <path fill="#ff5c40" d="M679.74,77.81c0-25.16,18.48-40.54,37.9-40.54,14.6,0,23.14,6.99,26.87,15.22V0h18.33v116.49h-18.33v-13.51c-3.73,8.23-12.27,15.07-26.87,15.07-19.57,0-37.9-14.76-37.9-40.23ZM744.19,77.81c0-13.67-9.47-23.61-22.68-23.61s-22.99,9.79-22.99,23.61,9.79,23.3,22.99,23.3,22.68-9.63,22.68-23.3Z" />
+          </svg>
+
+          <h1 class="sh-heading">Protect Your YouTube Videos Before Piracy Eats Your Reach &amp; Earnings</h1>
+          <p class="sh-subtext">YouTube-native Content ID protection, takedown enforcement, and revenue recovery built and operated by India's largest certified YouTube MCN.</p>
+          <div class="sh-ctas">
+            <a href="#" class="sh-cta sh-cta-primary">Protect my Content</a>
+            <a href="#" class="sh-cta sh-cta-blue">Explore how it works</a>
+          </div>
+        </div>
+
+        <div class="sh-right">
+          <!-- Shield emblem (PING_SHEILD-01.svg) -->
+          <svg class="sh-emblem" viewBox="0 0 245.23 256.11" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path fill="#78dfff" fill-rule="evenodd" d="M5.44,32.5L121.45,3.15c.82-.2,1.64-.19,2.39.02l116.21,29.4c2.18.55,3.64,2.51,3.64,4.66h0v88.54c0,80.63-111.95,130.24-122.44,127.2C73.86,239.4,1.54,189.69,1.54,125.77V37.23c0-2.35,1.68-4.3,3.9-4.73h0ZM161.74,78.26c-34.76-34.76-94.45-10.02-94.45,39.12s59.69,73.89,94.45,39.12c21.6-21.6,21.6-56.64,0-78.25h0Z" />
+            <path fill="#0096ff" d="M100.69,151.05l-6.97-22.97-18.04-11.57,4.21-10.98,11.88,8.88c-.13-9.23,2.07-18.21,9.07-24.55,7.92-7.17,19.58-8.42,29.22-4.11,7.38,3.3,11.75,10.03,12.51,17.93,1.02,10.56-4.42,19.91-13.92,24.45-6.76,3.23-13.63,3.95-21.87,2.96l6.26,19.9-12.35.05ZM130.44,109.31c1-4.49.17-8.98-3.18-12.18-3.46-3.31-8.4-3.96-13.2-2.46-9.41,2.94-11.83,15.21-9.78,25.23,11.12,2.96,23.86-.21,26.16-10.59Z" />
+            <rect fill="#0096ff" x="147.56" y="85.39" width="11.69" height="45.8" transform="translate(306.81 216.58) rotate(-180)" />
+            <ellipse fill="#ff5c40" cx="153.48" cy="144.12" rx="7.38" ry="7.37" />
+          </svg>
+
+          <div class="sh-stat sh-stat--0">
+            <span class="sh-stat-value">$250K+</span>
+            <span class="sh-stat-label">Revenue protected</span>
+          </div>
+          <div class="sh-stat sh-stat--1">
+            <span class="sh-stat-value">1,000,000+</span>
+            <span class="sh-stat-label">Uploads claimed</span>
+          </div>
+          <div class="sh-stat sh-stat--2">
+            <span class="sh-stat-value">20,000+</span>
+            <span class="sh-stat-label">Takedowns</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sh-badges-band">
+      <ul class="container-custom sh-badges">
+        <li class="sh-badge">
+          <svg class="sh-check" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="11" fill="none" stroke="#ffffff" stroke-width="1.6" />
+            <path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>Block, claim or monetise infringing uploads</span>
+        </li>
+        <li class="sh-badge">
+          <svg class="sh-check" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="11" fill="none" stroke="#ffffff" stroke-width="1.6" />
+            <path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>Operate inside YouTube's CMS &amp; Content ID</span>
+        </li>
+        <li class="sh-badge">
+          <svg class="sh-check" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="11" fill="none" stroke="#ffffff" stroke-width="1.6" />
+            <path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>Works for single assets or full channels</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 2 · SHIELD HOW ------------------------------------------------------------ -->
+  <section class="hw">
+    <!-- Decorative orange accent standing in for the live "shield-tick" curve art
+         (a filled ribbon shape driven by ThemeCurve, not a simple stroked path) —
+         reuses the shared .curve system at the shared stroke-width. -->
+    <div class="hw-curve">
+      <svg class="curve curve--orange" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid meet" style="left:0;right:0;top:0;bottom:0;width:100%;height:100%;opacity:.9" aria-hidden="true">
+        <path d="M40 340 L160 460 L380 60" />
+      </svg>
+    </div>
+
+    <div class="container-custom hw-inner">
+      <div class="hw-left">
+        <h2 class="hw-kicker">How it works</h2>
+        <h3 class="hw-heading">India's Leading Anti-Piracy Company for YouTube Creators &amp; Broadcasters. How Ping Network Stops YouTube Content Piracy at the Source</h3>
+        <p class="hw-body">As one of India's leading anti-piracy companies for YouTube, PING Network works closely with content creators, broadcasters, podcasters, micro-drama creators, and media companies across India, Dubai (UAE), Vietnam, and global markets to protect content where piracy spreads fastest.</p>
+        <span class="hw-plus" aria-hidden="true"></span>
+      </div>
+      <div class="hw-right">
+        <div class="hw-item">
+          <span class="hw-num">01</span>
+          <span class="hw-item-title">Content ID for Selected YouTube Videos</span>
+        </div>
+        <div class="hw-item">
+          <span class="hw-num">02</span>
+          <span class="hw-item-title">Full Channel-Level Protection</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · SHIELD MODEL 01 (variant: light) --------------------------------------- -->
+  <section class="sm sm--light">
+    <div class="container-custom">
+      <div class="sm-card">
+        <div class="sm-left">
+          <p class="sm-number">Model 01</p>
+          <h2 class="sm-title">Content ID for Selected YouTube Videos</h2>
+          <p class="sm-desc"><span>Designed for </span><span class="sm-hl">broadcasters, production houses, music labels, sports rights owners</span><span> and anyone managing a large or valuable content library.</span></p>
+          <p class="sm-desc">Instead of linking your whole YouTube channel, we protect only the content that matters most: premium episodes, viral clips, film scenes, sports highlights, or back-catalogue assets that continue to generate value over time.</p>
+          <p class="sm-desc">Using YouTube's Content ID system, these selected assets are registered and tracked. Whenever unauthorised uploads surface, they can be blocked, claimed or monetised per your requirements — letting you retain control and recover lost revenue.</p>
+          <a href="#" class="sm-cta">Apply for Model</a>
+        </div>
+        <div class="sm-bullets">
+          <svg class="sm-check" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="18" fill="none" stroke="#ffffff" stroke-width="2" />
+            <path d="M12 20.5l5 5 11-12" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <ul class="sm-list">
+            <li>Asset-level Content ID registration</li>
+            <li>Block, claim or monetise per asset</li>
+            <li>No change to existing channel ops</li>
+            <li>Ideal for libraries &amp; rights owners</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · SHIELD MODEL 02 (variant: dark) ----------------------------------------- -->
+  <section class="sm sm--dark">
+    <div class="container-custom">
+      <div class="sm-card">
+        <div class="sm-left">
+          <p class="sm-number">Model 02</p>
+          <h2 class="sm-title">Full Channel-Level Protection</h2>
+          <p class="sm-desc"><span>Built for </span><span class="sm-hl">creators, digital publishers, and fast-moving content teams</span><span> who actively upload content on their own channels. Your channel is securely linked to PING's certified YouTube CMS, enabling channel-level Content ID protection.</span></p>
+          <p class="sm-desc">Every new video you publish is automatically protected against unauthorised reuploads from the moment it goes live — no manual asset submission required.</p>
+          <p class="sm-desc">As your content scales, your copyright protection and monetisation safeguards scale with it — without slowing down your publishing process.</p>
+          <a href="#" class="sm-cta">Talk to Model</a>
+        </div>
+        <div class="sm-bullets">
+          <svg class="sm-check" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="18" fill="none" stroke="#ffffff" stroke-width="2" />
+            <path d="M12 20.5l5 5 11-12" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <ul class="sm-list">
+            <li>Channel-wide auto-protection</li>
+            <li>Zero workflow disruption</li>
+            <li>Real-time reupload defense</li>
+            <li>Ideal for creators &amp; publishers</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · SHIELD COST -------------------------------------------------------------- -->
+  <section class="sc">
+    <div class="container-custom sc-inner">
+      <div class="sc-left">
+        <p class="sc-eyebrow">The Cost of Piracy</p>
+        <h2 class="sc-heading">Piracy Doesn't Just Steal Views It Steals Revenue, Rights &amp; Market Momentum.</h2>
+        <p class="sc-body">Piracy today moves faster than content distribution itself. The moment a movie clip, episode, highlight, or creator moment begins to gain traction, unauthorised versions surface — often within hours — siphoning views, revenue and audience trust. What looks like harmless duplication is often a structural problem that impacts how your brand performs and earns.</p>
+        <span class="sc-plus" aria-hidden="true"></span>
+      </div>
+      <div class="sc-right">
+        <p class="sc-chart-title">Categories most affected across our enforcement coverage:</p>
+        <div class="sc-bars">
+          <div class="sc-bar-col">
+            <span class="sc-bar-label">Food Content</span>
+            <div class="sc-bar" style="height: calc((100% - 3.75rem) * 100 / 100)">
+              <span class="sc-bar-pct">40%</span>
+            </div>
+          </div>
+          <div class="sc-bar-col">
+            <span class="sc-bar-label">Films &amp; Entertainment</span>
+            <div class="sc-bar" style="height: calc((100% - 3.75rem) * 75 / 100)">
+              <span class="sc-bar-pct">30%</span>
+            </div>
+          </div>
+          <div class="sc-bar-col">
+            <span class="sc-bar-label">Other Genres</span>
+            <div class="sc-bar" style="height: calc((100% - 3.75rem) * 45 / 100)">
+              <span class="sc-bar-pct">18%</span>
+            </div>
+          </div>
+          <div class="sc-bar-col">
+            <span class="sc-bar-label">Sports</span>
+            <div class="sc-bar" style="height: calc((100% - 3.75rem) * 30 / 100)">
+              <span class="sc-bar-pct">12%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · SHIELD STATS --------------------------------------------------------------- -->
+  <section class="ss">
+    <div class="container-custom">
+      <p class="ss-eyebrow">3-Year Track Record</p>
+      <h2 class="ss-title">Ping Network's Measurable Results in Content Protection</h2>
+      <p class="ss-subtitle">A consistent, system-driven approach to protecting content, preserving ownership rights, and ensuring rightful monetisation.</p>
+      <ul class="ss-list">
+        <li class="ss-row">
+          <span class="ss-value">1,00,000+</span>
+          <span class="ss-desc">Unauthorised uploads claimed across YouTube</span>
+        </li>
+        <li class="ss-row">
+          <span class="ss-value">20,000+</span>
+          <span class="ss-desc">Takedowns through copyright strikes</span>
+        </li>
+        <li class="ss-row">
+          <span class="ss-value">1,800+</span>
+          <span class="ss-desc">Infringing channels actioned</span>
+        </li>
+        <li class="ss-row ss-row--accent">
+          <span class="ss-value">$250,000+</span>
+          <span class="ss-desc">Original revenue recovered &amp; protected</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 7 · SHIELD INSIGHTS -------------------------------------------------------------- -->
+  <section class="si">
+    <div class="si-head">
+      <div class="container-custom">
+        <h2 class="si-title">Insights on YouTube Piracy, Rights &amp; Revenue</h2>
+        <a href="#" class="si-explore">Explore More</a>
+      </div>
+    </div>
+    <div class="si-band">
+      <div class="container-custom">
+        <div class="si-grid">
+          <article class="si-card">
+            <div class="si-thumb"><div class="si-ph" style="background:#4295f8"></div></div>
+            <h3 class="si-card-title">Name of Video Title two lines</h3>
+          </article>
+          <article class="si-card">
+            <div class="si-thumb"><div class="si-ph" style="background:#92deff"></div></div>
+            <h3 class="si-card-title">Name of Video Title two lines</h3>
+          </article>
+        </div>
+      </div>
+      <span class="si-dot" aria-hidden="true"></span>
+    </div>
+  </section>
+
+  <!-- 8 · SHIELD FAQ ---------------------------------------------------------------------- -->
+  <section class="fq">
+    <div class="container-custom fq-inner">
+      <h2 class="fq-title">FAQ's</h2>
+      <ul class="fq-list">
+        <li class="fq-item"><details open>
+          <summary class="fq-q"><span class="fq-num">01</span><span class="fq-q-text">How is Ping Network's Anti-Piracy Management Service?</span><span class="fq-icon"></span></summary>
+          <div class="fq-a">PING Network provides YouTube-native anti-piracy protection using Content ID, takedown enforcement, and revenue recovery — operated by India's largest certified YouTube MCN.</div>
+        </details></li>
+        <li class="fq-item"><details>
+          <summary class="fq-q"><span class="fq-num">02</span><span class="fq-q-text">How is Ping Network different from other anti-piracy companies in India?</span><span class="fq-icon"></span></summary>
+          <div class="fq-a">We operate inside YouTube's official CMS and Content ID system, offering both asset-level and full channel-level protection with measurable, transparent results.</div>
+        </details></li>
+        <li class="fq-item"><details>
+          <summary class="fq-q"><span class="fq-num">03</span><span class="fq-q-text">Which types of content can be protected under your service?</span><span class="fq-icon"></span></summary>
+          <div class="fq-a">Films, episodes, highlights, music, sports, food content, creator videos and back-catalogue assets — across single assets or full channels.</div>
+        </details></li>
+        <li class="fq-item"><details>
+          <summary class="fq-q"><span class="fq-num">04</span><span class="fq-q-text">What are the two protection models you offer?</span><span class="fq-icon"></span></summary>
+          <div class="fq-a">Model 01 (Content ID for selected videos) and Model 02 (full channel-level protection). Choose based on your content library and workflow.</div>
+        </details></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 9 · SHIELD CTA -------------------------------------------------------------------- -->
+  <section class="cta">
+    <div class="container-custom cta-inner">
+      <h2 class="cta-heading">Ready to protect your YouTube content?</h2>
+      <p class="cta-subtext">Tell us about your channel or library — our team will recommend the right model and walk you through onboarding.</p>
+      <a href="#" class="cta-btn">Get Started</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================ SHARED SHELL: FOOTER ======================= -->
+<footer class="site-footer">
+  <div class="container-custom">
+    <div class="footer-cols">
+      <!-- A · Brand -->
+      <div class="footer-col footer-col-brand">
+        <svg class="footer-logo" viewBox="0 0 170 77" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ping Network">
+          <path d="M20.5806 76.6514V66.5298H23.4017L27.3498 72.0967V66.5298H30.0238V76.6514H27.3498L23.2581 70.8799V76.6514H20.5842H20.5806Z" fill="#fff"/>
+          <path d="M36.0967 76.6514V66.5298H42.8803V68.9884H38.7742V70.3918H42.1014V72.7786H38.7742V74.1964H42.9808V76.655H36.0967V76.6514Z" fill="#fff"/>
+          <path d="M51.1498 76.6514V68.9884H48.2856V66.5298H56.6737V68.9884H53.8238V76.6514H51.1498Z" fill="#fff"/>
+          <path d="M64.2686 76.6514L61.3613 66.5298H64.0927L65.6971 72.531L67.2153 66.5298H69.875L71.4363 72.373L72.9976 66.5298H75.7326L72.8253 76.6514H70.0472L68.5434 70.6646L67.0395 76.6514H64.2614H64.2686Z" fill="#fff"/>
+          <path d="M85.958 76.8273C84.8956 76.8273 83.9588 76.6047 83.144 76.1561C82.3293 75.7074 81.6904 75.0901 81.2274 74.3041C80.7644 73.518 80.5347 72.6207 80.5347 71.6085C80.5347 70.5964 80.768 69.6811 81.2274 68.8987C81.6904 68.1126 82.3257 67.4953 83.1369 67.0466C83.948 66.598 84.8776 66.3755 85.9293 66.3755C86.9809 66.3755 87.9249 66.598 88.736 67.0466C89.5472 67.4953 90.1825 68.1126 90.6455 68.8987C91.1085 69.6847 91.3382 70.5892 91.3382 71.6085C91.3382 72.6279 91.1085 73.5216 90.6527 74.3041C90.1933 75.0901 89.5616 75.7074 88.7504 76.1561C87.9392 76.6047 87.0096 76.8273 85.958 76.8273ZM85.958 74.3687C86.4784 74.3687 86.9378 74.2502 87.3327 74.0133C87.7275 73.7764 88.0361 73.4534 88.2587 73.0371C88.4812 72.6243 88.5925 72.1469 88.5925 71.605C88.5925 71.063 88.4776 70.5856 88.2515 70.1657C88.0254 69.7457 87.7131 69.4191 87.3111 69.1822C86.9091 68.9453 86.4497 68.8269 85.9293 68.8269C85.4088 68.8269 84.9638 68.9453 84.5618 69.1822C84.1634 69.4191 83.8475 69.7457 83.6214 70.1657C83.3953 70.5856 83.2804 71.063 83.2804 71.605C83.2804 72.1469 83.3953 72.6207 83.6286 73.0371C83.8583 73.4534 84.1741 73.7764 84.5761 74.0133C84.9745 74.2502 85.4375 74.3687 85.958 74.3687Z" fill="#fff"/>
+          <path d="M96.9054 76.6514V66.5298H101.098C101.859 66.5298 102.533 66.6769 103.122 66.9713C103.711 67.2656 104.17 67.6712 104.504 68.1844C104.838 68.7013 105.003 69.2971 105.003 69.9719C105.003 70.6466 104.838 71.2281 104.511 71.7521C104.184 72.2725 103.739 72.6781 103.179 72.9653L105.405 76.6514H102.34L100.516 73.4426H99.5758V76.6514H96.9019H96.9054ZM99.5794 70.984H100.954C101.195 70.984 101.406 70.9409 101.589 70.8548C101.772 70.7687 101.916 70.6466 102.024 70.4923C102.131 70.338 102.182 70.1657 102.182 69.9719C102.182 69.6811 102.067 69.4442 101.841 69.2576C101.614 69.071 101.317 68.9741 100.95 68.9741H99.5758V70.984H99.5794Z" fill="#fff"/>
+          <path d="M110.832 76.6514V66.5298H113.506V69.9001L116.556 66.5298H120.07L115.864 71.0989L120.203 76.6514H116.876L114.098 73.0083L113.506 73.658V76.6514H110.832Z" fill="#fff"/>
+          <path d="M130.023 72.05L134.198 64.0999C139.176 66.8169 144.52 68.4357 150.087 67.6604C158.077 66.5477 160.797 60.0082 160.133 52.198C156.085 57.2086 150.266 60.0154 143.842 59.5811C135.831 59.0427 129.252 54.1147 126.552 46.5414C124.367 40.4075 124.937 33.8212 127.719 27.9206C131.089 20.7708 138.095 16.7114 146.042 16.977C151.566 17.1637 156.196 19.7946 159.982 24.2165L160.18 18.1902H169.996C169.961 24.8661 169.203 31.2801 167.566 37.773C170.556 47.7438 171.769 60.2917 165.381 68.7085C161.881 73.3206 156.734 75.8043 150.956 76.5509C143.741 77.4482 136.577 75.8402 130.023 72.0464V72.05ZM158.421 38.0816C157.427 34.0904 154.828 30.4976 151.408 28.2902C146.957 25.4189 141.48 26.2803 138.174 30.3146C135.619 33.4336 134.621 37.5468 135.482 41.4986C136.376 45.6082 139.542 48.6088 143.199 49.603C150.536 51.5986 156.605 45.5903 158.421 38.0816Z" fill="#fff"/>
+          <path d="M101.88 26.7074C88.8297 26.9335 89.2425 47.5105 89.4004 58.4325L79.6377 58.4181V18.1938H89.4865L89.6193 25.7527C93.9192 17.6518 104.077 14.5507 112.023 19.2885C116.786 22.1275 119.23 27.156 119.715 32.6583L119.729 58.4289L110.071 58.4361L110.017 34.6144C110.006 29.9449 106.32 26.632 101.88 26.7074Z" fill="#fff"/>
+          <path d="M71.1674 18.4378H60.9561V58.4361H71.1674V18.4378Z" fill="#fff"/>
+          <path d="M66.0024 12.8709C69.5626 12.8709 72.4486 9.98969 72.4486 6.43547C72.4486 2.88126 69.5626 0 66.0024 0C62.4422 0 59.5562 2.88126 59.5562 6.43547C59.5562 9.98969 62.4422 12.8709 66.0024 12.8709Z" fill="#FF6A4D"/>
+          <path d="M20.7708 58.4397L14.985 39.363L0 29.7511L3.49231 20.6344L13.3627 28.0139C13.2586 20.3473 15.0855 12.8889 20.8929 7.62351C27.4683 1.6654 37.1556 0.631706 45.1668 4.21375C51.2936 6.95232 54.9223 12.5443 55.5575 19.1054C56.4046 27.8739 51.8894 35.641 43.9931 39.4132C38.3795 42.0944 32.6763 42.6902 25.828 41.8719L31.0288 58.4002L20.7708 58.4433V58.4397ZM45.4862 23.7678C46.3153 20.0386 45.6298 16.3058 42.8481 13.6462C39.9696 10.8969 35.8671 10.3549 31.8795 11.604C24.0621 14.0482 22.0522 24.238 23.7571 32.565C32.9885 35.0272 43.5731 32.3891 45.4862 23.7678Z" fill="#fff"/>
+        </svg>
+        <p class="footer-about">Ping Network India is a YouTube Multi Channel Network (MCN) which is dedicated to helping brands, creators and content owners maximize their reach and revenue on YouTube.</p>
+      </div>
+
+      <!-- B · Contact -->
+      <div class="footer-col footer-col-contact">
+        <h4 class="footer-heading">Contact Us</h4>
+        <p class="footer-contact-company">Ping Digital Broadcast Pvt. Ltd.</p>
+        <p class="footer-contact-address">319, Adhyaru Industrial Estate, Inside Sun-Mill Compound, Opposite Phoenix Mills, Lower Parel, Mumbai, Maharashtra 400013.</p>
+        <a class="footer-contact-link" href="mailto:partner.support@pingnetwork.in">partner.support@pingnetwork.in</a>
+        <p class="footer-cv-label">Send us your CV at</p>
+        <a class="footer-contact-link" href="mailto:jobs@pingnetwork.in">jobs@pingnetwork.in</a>
+      </div>
+
+      <!-- C · Quick Links + social -->
+      <div class="footer-col footer-col-links">
+        <h4 class="footer-heading">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="home.html">Home</a></li>
+          <li><a href="knowledge.html">Channels</a></li>
+          <li><a href="knowledge.html">Knowledge Centre</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+        <div class="footer-social-row">
+          <a href="#" class="social-icon" aria-label="Facebook"><svg class="icon-social" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg></a>
+          <a href="#" class="social-icon" aria-label="Twitter"><svg class="icon-social" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg></a>
+          <a href="#" class="social-icon" aria-label="LinkedIn"><svg class="icon-social" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14zM8.339 18.337V9.925H5.552v8.412h2.787zM6.945 8.777a1.615 1.615 0 100-3.23 1.615 1.615 0 000 3.23zm11.395 9.56v-4.615c0-2.42-.517-4.28-3.343-4.28-1.36 0-2.272.745-2.647 1.45h-.038V9.925H9.635v8.412h2.786v-4.164c0-1.098.208-2.16 1.567-2.16 1.34 0 1.358 1.253 1.358 2.23v4.094h2.994z"/></svg></a>
+          <a href="#" class="social-icon" aria-label="Instagram"><svg class="icon-social" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+          <a href="#" class="social-icon" aria-label="YouTube"><svg class="icon-social" fill="none" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M10.2 9.3l4.8 2.7-4.8 2.7z" fill="currentColor"/></svg></a>
+        </div>
+      </div>
+
+      <!-- D · Brand mark -->
+      <div class="footer-col footer-col-pmark">
+        <svg class="footer-pmark" viewBox="0 0 193 156.117" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M56.6627 153.28L40.8787 101.339L0 75.1673L9.52945 50.3431L36.4557 70.436C36.1714 49.5573 41.1576 29.2516 57.0017 14.9213C74.9344 -1.30797 101.358 -4.12382 123.21 5.62249C139.929 13.0768 149.825 28.3075 151.558 46.1684C153.871 70.0485 141.553 91.1892 120.006 101.459C104.693 108.761 89.1328 110.387 70.4567 108.155L84.6388 153.16L56.6573 153.274L56.6627 153.28ZM124.085 58.8725C126.343 48.7223 124.473 38.5504 116.89 31.3198C109.039 23.8327 97.8477 22.3593 86.9733 25.7536C65.6509 32.4112 60.1673 60.1549 64.8144 82.8235C90.0021 89.5302 118.869 82.3433 124.091 58.8725H124.085Z" fill="#fff"/>
+          <path d="M162.864 108.368H189.364V4.77619H162.864V108.368Z" fill="#fff"/>
+          <path d="M176.276 156.117C185.512 156.117 193 148.655 193 139.451C193 130.247 185.512 122.785 176.276 122.785C167.039 122.785 159.551 130.247 159.551 139.451C159.551 148.655 167.039 156.117 176.276 156.117Z" fill="#FF6A4D"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2025 Ping Digital Broadcast Pvt. Ltd. All rights reserved.</span>
+      <span>partner.support@pingnetwork.in</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+[
+  {
+    "slug": "review-genres",
+    "name": "Review Genres",
+    "description": "What kind of thing is being reviewed.",
+    "kind": "category",
+    "is_hierarchical": false,
+    "terms": [
+      { "slug": "tech", "name": "Tech", "sort_order": 0 },
+      { "slug": "books", "name": "Books", "sort_order": 1 }
+    ]
+  },
+  {
+    "slug": "review-tags",
+    "name": "Review Tags",
+    "kind": "tag",
+    "is_hierarchical": false,
+    "terms": [
+      { "slug": "editors-pick", "name": "Editor's Pick" },
+      { "slug": "budget", "name": "Budget" }
+    ]
+  }
+]

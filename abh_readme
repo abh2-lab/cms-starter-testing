@@ -1,0 +1,10 @@
+
+coolify env values
+
+PREVIEW_TOKEN_SECRET=3a0d74441f7c4cf5602806c46e29dca321da59e0580638d8fc70e88096d659e1
+WEBHOOK_SECRET_ENCRYPTION_KEY=d7c17f575013c28dc30d0377838438f97dc8d4d53c41d5e0422e22c1cf587e9b
+MEILI_MASTER_KEY=d98fb1ace9e6ce025a7bda876d42010d7283bacbcd025ffb92c955b152c30753
+PUBLIC_TENANT_SLUG=newping
+
+
+cd /repo/apps/api && node_modules/.bin/tsx scripts/seed-fixtures.ts ping --tenant=newping

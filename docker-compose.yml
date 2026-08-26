@@ -1,0 +1,538 @@
+# Production / Coolify compose file. Intentionally publishes NO host ports —
+# Coolify routes external traffic to the app services (api, admin, web) through
+# its own Traefik proxy via the domains you assign in its UI, and the backing
+# services talk to each other over the compose network by DNS name. Keeping the
+# host free of bindings is what lets this stack co-exist with Coolify's own
+# Postgres/Redis and any other deployment on the same host (no "port is already
+# allocated" errors).
+#
+# For LOCAL development, docker-compose.override.yml adds the host port mappings
+# back. `docker compose up` merges it automatically. To reproduce the Coolify
+# (no-ports) topology locally, run: docker compose -f docker-compose.yml up.
+services:
+  postgres:
+    image: postgres:18-alpine
+    # Internal-only — never publicly routed. The labels tell Coolify (newer
+    # versions read coolify.managed; older fall back to traefik.enable) to skip
+    # the proxy/domain UI so operators don't accidentally expose Postgres.
+    labels:
+      - "coolify.managed=true"
+      - "traefik.enable=false"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cms
+      # Local-only: containers on the compose network are trusted. Never use trust auth in production.
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      # Postgres 18+ uses major-version subdirs under /var/lib/postgresql.
+      # Mount the parent dir, NOT /var/lib/postgresql/data — see docker-library/postgres#1259.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cms"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    labels:
+      - "coolify.managed=true"
+      - "traefik.enable=false"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      # Transaction pooling matches the production deployment — same mode constraints
+      # surface locally (no SET, no advisory locks, no LISTEN/NOTIFY on pooled connection).
+      POOL_MODE: transaction
+      AUTH_TYPE: trust
+      ADMIN_USERS: postgres
+      MAX_CLIENT_CONN: "100"
+      DEFAULT_POOL_SIZE: "20"
+      RESERVE_POOL_SIZE: "5"
+      SERVER_RESET_QUERY: DISCARD ALL
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+    labels:
+      - "coolify.managed=true"
+      - "traefik.enable=false"
+    ulimits:
+      memlock: -1
+    # BullMQ ships Lua scripts that touch keys not declared in KEYS[], which
+    # Dragonfly's stricter Lua sandbox rejects by default. `allow-undeclared-keys`
+    # is the documented Dragonfly + BullMQ compatibility flag — see
+    # https://www.dragonflydb.io/docs/integrations/bullmq. Without it, every
+    # `queue.add()` errors with "script tried accessing undeclared key".
+    command: ["--default_lua_flags=allow-undeclared-keys"]
+    volumes:
+      - dragonfly-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.11
+    labels:
+      - "coolify.managed=true"
+      - "traefik.enable=false"
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-}
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meili-data:/meili_data
+    healthcheck:
+      # Use 127.0.0.1 — busybox wget in Alpine resolves "localhost" to IPv6 (::1)
+      # which Meilisearch doesn't bind to, causing healthcheck to falsely fail.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:7700/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # S3-compatible object store for media. Console at http://localhost:9001
+  # (minioadmin / minioadmin). Swap for Garage/AWS in production via S3_* env.
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      # Rotate these in production — MinIO is publicly routed via Coolify so
+      # the defaults leak the bucket to anyone who knows the URL.
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      # Coolify: the _9000 suffix routes the minio FQDN to container port 9000
+      # (browser-facing S3 API for media). Without it Traefik defaults to :80 → 502.
+      SERVICE_FQDN_MINIO_9000: ${SERVICE_FQDN_MINIO_9000:-}
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+
+  # One-shot: wait for MinIO, then create the media bucket if missing.
+  minio-setup:
+    image: minio/mc:latest
+    labels:
+      - "coolify.managed=true"
+      - "traefik.enable=false"
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minioadmin minioadmin; do
+        echo 'waiting for minio...'; sleep 2;
+      done;
+      mc mb -p local/cms-media;
+      echo 'bucket ready';
+      exit 0;
+      "
+    restart: "no"
+
+  # One-shot: when an as-is clone bundles ./snapshot/postgres.dump AND the
+  # database is still empty, restore it BEFORE migrations run. The empty-DB
+  # guard makes redeploys safe — it never clobbers live data. Blank starters
+  # have no dump here, so this is a clean no-op for them. (export:clone writes
+  # the snapshot; pg_dump/pg_restore mirror scripts/{backup,restore}-postgres.sh.)
+  db-restore:
+    image: postgres:18-alpine
+    labels:
+      - "coolify.managed=true"
+      - "traefik.enable=false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./snapshot:/snapshot:ro
+    environment:
+      # Direct (not via PgBouncer) — pg_restore issues DDL the transaction pool
+      # can't handle.
+      DIRECT_DATABASE_URL: postgres://postgres:postgres@postgres:5432/cms
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        if [ ! -f /snapshot/postgres.dump ]; then
+          echo "db-restore: no /snapshot/postgres.dump — skipping (blank starter)."
+          exit 0
+        fi
+        EXISTING=$$(psql "$$DIRECT_DATABASE_URL" -tAc "SELECT to_regclass('public.tenants')" || true)
+        if [ -n "$$EXISTING" ]; then
+          echo "db-restore: database already initialised — skipping restore."
+          exit 0
+        fi
+        echo "db-restore: restoring snapshot into the empty database..."
+        pg_restore --clean --if-exists --no-owner --no-privileges \
+          -d "$$DIRECT_DATABASE_URL" /snapshot/postgres.dump
+        echo "db-restore: done."
+    restart: "no"
+
+  # One-shot: when an as-is clone bundles ./snapshot/media, mirror it into the
+  # bucket after minio-setup created it. No-op for blank starters.
+  media-restore:
+    image: minio/mc:latest
+    labels:
+      - "coolify.managed=true"
+      - "traefik.enable=false"
+    depends_on:
+      minio-setup:
+        condition: service_completed_successfully
+    volumes:
+      - ./snapshot:/snapshot:ro
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    entrypoint: >
+      /bin/sh -c "
+      if [ ! -d /snapshot/media ] || [ -z \"$$(ls -A /snapshot/media 2>/dev/null)\" ]; then
+        echo 'media-restore: no bundled media - skipping.'; exit 0;
+      fi;
+      until mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD; do
+        echo 'waiting for minio...'; sleep 2;
+      done;
+      mc mirror --overwrite /snapshot/media local/cms-media;
+      echo 'media-restore: done.';
+      exit 0;
+      "
+    restart: "no"
+
+  # One-shot: apply Drizzle migrations to a freshly-initialised Postgres, then
+  # exit. Mirrors the minio-setup pattern above. Reuses the api image — its
+  # runner stage already includes packages/db/{drizzle.config.ts,dist,migrations}
+  # and the hoisted drizzle-kit binary, so no separate Dockerfile is needed.
+  # The api and worker services gate on this completing successfully so they
+  # never come up against an unmigrated schema.
+  db-migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    labels:
+      - "coolify.managed=true"
+      - "traefik.enable=false"
+    working_dir: /repo/packages/db
+    environment:
+      # Direct (not via PgBouncer) — drizzle-kit issues DDL + advisory locks
+      # that PgBouncer's transaction pool can't safely handle.
+      DIRECT_DATABASE_URL: postgres://postgres:postgres@postgres:5432/cms
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # Restore-then-migrate: a restored clone already carries the migrations
+      # journal, so `migrate` is a safe no-op; a blank DB gets migrated normally.
+      db-restore:
+        condition: service_completed_successfully
+    # The drizzle-kit binary is the per-package devDep at
+    # packages/db/node_modules/.bin/drizzle-kit (a pnpm-generated shell wrapper).
+    # pnpm does NOT flatten it to /repo/node_modules/drizzle-kit/. The script
+    # reads drizzle.config.ts from cwd (working_dir above) which references
+    # ./dist/schema/index.js (built by the api image's builder stage) and uses
+    # ./migrations/ for the migration history.
+    command: ["/repo/packages/db/node_modules/.bin/drizzle-kit", "migrate"]
+    restart: "no"
+
+  # One-shot: rebuild the Meilisearch index from the database after restore +
+  # migrate. The index is derived/ephemeral (never snapshotted). Safe in both
+  # modes — on an empty DB it indexes nothing; the api's nightly cron and
+  # on-write indexing keep it fresh afterwards. Reuses the api image, whose
+  # runner ships apps/api/{src,scripts} + tsx (see apps/api/Dockerfile), running
+  # the reindex script directly (the npm script's --env-file is for hybrid dev;
+  # here env comes from compose). Not gated on by api/web, so the site boots
+  # even if search indexing is slow or briefly fails.
+  meili-reindex:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    labels:
+      - "coolify.managed=true"
+      - "traefik.enable=false"
+    working_dir: /repo/apps/api
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      DATABASE_URL: postgres://postgres:postgres@pgbouncer:5432/cms
+      DIRECT_DATABASE_URL: postgres://postgres:postgres@postgres:5432/cms
+      REDIS_URL: redis://dragonfly:6379
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-}
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: cms-media
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      S3_FORCE_PATH_STYLE: "true"
+      PUBLIC_TENANT_SLUG: ${PUBLIC_TENANT_SLUG:-test-tenant}
+      # Required by @cms/config's Zod validation at NODE_ENV=production (same
+      # secrets the api/worker need); compose reads them from .env / Coolify UI.
+      PREVIEW_TOKEN_SECRET: ${PREVIEW_TOKEN_SECRET}
+      WEBHOOK_SECRET_ENCRYPTION_KEY: ${WEBHOOK_SECRET_ENCRYPTION_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
+    command: ["node_modules/.bin/tsx", "scripts/meili-reindex.ts"]
+    restart: "no"
+
+  # ─── Application services ───────────────────────────────────────────────────
+  # Coolify reads this compose file directly. Required secrets (no default):
+  # PREVIEW_TOKEN_SECRET, WEBHOOK_SECRET_ENCRYPTION_KEY. Both must be ≥32 chars
+  # in production — Zod validation in @cms/config will exit the container at
+  # boot with a clear message if they're missing.
+  #
+  # No `ports:` here on purpose — assign each of api/admin/web a domain in
+  # Coolify and it wires up the proxy to the container's EXPOSEd port. Locally,
+  # docker-compose.override.yml publishes them to localhost.
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      args:
+        # Version baked into the image. The release workflow sets CMS_VERSION
+        # from the git tag; locally it stays 0.0.0 = an unversioned dev build.
+        CMS_VERSION: ${CMS_VERSION:-0.0.0}
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      API_PORT: "3000"
+      # Coolify (Docker Compose): the _3000 suffix makes Coolify emit the Traefik
+      # loadbalancer.server.port=3000 label, so the api's auto-generated domain
+      # routes to container port 3000 instead of defaulting to :80 (HTTP 502).
+      SERVICE_FQDN_API_3000: ${SERVICE_FQDN_API_3000:-}
+      DATABASE_URL: postgres://postgres:postgres@pgbouncer:5432/cms
+      DIRECT_DATABASE_URL: postgres://postgres:postgres@postgres:5432/cms
+      REDIS_URL: redis://dragonfly:6379
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-}
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: cms-media
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      S3_FORCE_PATH_STYLE: "true"
+      # Public HTTPS endpoint of the object store, used to sign browser-facing
+      # upload/download URLs. Empty in local dev (the browser reaches MinIO on
+      # localhost:9000). In Coolify it auto-derives from SERVICE_URL_MINIO (the
+      # minio service's public URL) so presigned URLs never point at the internal
+      # http://minio:9000. Set S3_PUBLIC_ENDPOINT explicitly to override (e.g. a
+      # CDN). Requires the minio service to have a public domain.
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-${SERVICE_URL_MINIO:-}}
+      PUBLIC_TENANT_SLUG: ${PUBLIC_TENANT_SLUG:-test-tenant}
+      # ─── Update checks ────────────────────────────────────────────────────
+      # Daily poll of the release manifest, so the admin can tell the operator
+      # a new version exists. Detection only — nothing is ever applied
+      # automatically. Set UPDATE_CHECK_ENABLED=false to stop the outbound
+      # call entirely. See docs/phase-3-versioning-and-updates-plan.md.
+      UPDATE_CHECK_ENABLED: ${UPDATE_CHECK_ENABLED:-true}
+      UPDATE_MANIFEST_URL: ${UPDATE_MANIFEST_URL:-https://raw.githubusercontent.com/abh2-lab/cms-releases/main/releases.json}
+      # CORS_ALLOWED_ORIGINS intentionally omitted — admin and web reach the
+      # API same-origin (admin via nginx proxy, web via Nitro proxy). To allow
+      # an external frontend or mobile client, re-add the line
+      #   CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      # and set the value (comma-separated origins) in Coolify's env UI.
+      # See STARTER-README §3 → "Connecting an external frontend".
+      PREVIEW_TOKEN_SECRET: ${PREVIEW_TOKEN_SECRET}
+      WEBHOOK_SECRET_ENCRYPTION_KEY: ${WEBHOOK_SECRET_ENCRYPTION_KEY}
+      # Shared secret for the post-publish SWR cache purge (api POSTs to the
+      # web container's /api/_purge with it). Empty disables the call — the
+      # public site still refreshes within the 300s cache TTL. Must match the
+      # web service's PURGE_SECRET. See apps/api/src/lib/purge-web-cache.ts.
+      PURGE_SECRET: ${PURGE_SECRET:-}
+    depends_on:
+      pgbouncer:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      dragonfly:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      minio-setup:
+        condition: service_completed_successfully
+      db-migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+      args:
+        CMS_VERSION: ${CMS_VERSION:-0.0.0}
+    # Internal background processor — never publicly routed. The labels tell
+    # Coolify to skip the proxy/domain UI (no pointless public worker domain).
+    labels:
+      - "coolify.managed=true"
+      - "traefik.enable=false"
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      WORKER_PORT: "3100"
+      DATABASE_URL: postgres://postgres:postgres@pgbouncer:5432/cms
+      REDIS_URL: redis://dragonfly:6379
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-}
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: cms-media
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      S3_FORCE_PATH_STYLE: "true"
+      PUBLIC_TENANT_SLUG: ${PUBLIC_TENANT_SLUG:-test-tenant}
+      WEBHOOK_SECRET_ENCRYPTION_KEY: ${WEBHOOK_SECRET_ENCRYPTION_KEY}
+      # ─── Update checks ────────────────────────────────────────────────────
+      # Daily poll of the release manifest, so the admin can tell the operator
+      # a new version exists. Detection only — nothing is ever applied
+      # automatically. Set UPDATE_CHECK_ENABLED=false to stop the outbound
+      # call entirely. See docs/phase-3-versioning-and-updates-plan.md.
+      UPDATE_CHECK_ENABLED: ${UPDATE_CHECK_ENABLED:-true}
+      UPDATE_MANIFEST_URL: ${UPDATE_MANIFEST_URL:-https://raw.githubusercontent.com/abh2-lab/cms-releases/main/releases.json}
+      # Email provider config (SMTP / Resend / Sendinblue / HTTP credentials) is
+      # owned by admin Settings → Email and persisted encrypted in the DB. The
+      # worker only needs a baseline provider env to boot; the actual provider +
+      # creds are resolved at runtime from the DB. Switch from `stub` after the
+      # operator configures their real provider in the admin UI.
+      EMAIL_PROVIDER: stub
+      EMAIL_FROM: noreply@cms.local
+      # Tuning knobs — defaults match @cms/config; edit in-file if you need to
+      # scale per host. Not surfaced via env to keep the Coolify form minimal.
+      WORKER_IMAGE_CONCURRENCY: "2"
+      WORKER_WEBHOOK_CONCURRENCY: "16"
+      WORKER_SEARCH_INDEX_CONCURRENCY: "8"
+      WORKER_SCHEDULE_PUBLISH_CONCURRENCY: "4"
+      WORKER_EMAIL_CONCURRENCY: "4"
+    depends_on:
+      pgbouncer:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      dragonfly:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      minio-setup:
+        condition: service_completed_successfully
+      db-migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    # In-process shutdown watchdog asks for ~30s drain (apps/worker/src/index.ts).
+    # Give Docker enough rope so SIGKILL doesn't truncate in-flight jobs.
+    stop_grace_period: 45s
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3100/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+
+  # Vue 3 + Vite admin dashboard, built as a static SPA and served by nginx.
+  # The container also reverse-proxies /api/* (and /docs) to the api service
+  # so the SPA hits the same origin in the browser — session cookie's Path=/
+  # and SameSite=Lax keep working without CORS, matching the Vite dev proxy.
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  # Nuxt 4 public site (Nitro node-server). It reaches the api SAME-ORIGIN via a
+  # built-in Nitro `/api/public/**` proxy (baked to http://api:3000 at image
+  # build time — see apps/web/Dockerfile). No API URL or CORS env is needed here
+  # for either SSR or browser requests.
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      NODE_ENV: production
+      NITRO_PORT: "3001"
+      NITRO_HOST: 0.0.0.0
+      # Coolify: the _3001 suffix routes the web FQDN to container port 3001.
+      SERVICE_FQDN_WEB_3001: ${SERVICE_FQDN_WEB_3001:-}
+      # The admin's public origin (e.g. https://admin.example.com). REQUIRED for
+      # the admin to iframe the public site in production — the structure
+      # editor's live preview and the Block Gallery's per-block previews. In
+      # Coolify it auto-derives from SERVICE_URL_ADMIN (the admin service's public
+      # URL); set NUXT_ADMIN_ORIGIN explicitly to override. When empty, the
+      # security-headers middleware falls back to X-Frame-Options: SAMEORIGIN and
+      # those iframes render blank.
+      NUXT_ADMIN_ORIGIN: ${NUXT_ADMIN_ORIGIN:-${SERVICE_URL_ADMIN:-}}
+      # Must match the api service's PURGE_SECRET to enable the SWR purge.
+      PURGE_SECRET: ${PURGE_SECRET:-}
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
+  # Postgres logical backup → S3. Profile-gated so `docker compose up` doesn't
+  # start it; invoke explicitly with `docker compose run --rm backup` or schedule
+  # via Coolify's cron-job UI (recommended cadence: every 24h at off-peak UTC).
+  # The image is a tiny postgres+mc helper; the script lives in scripts/.
+  # See docs/runbooks/postgres-restore.md for the restore drill.
+  backup:
+    image: postgres:18-alpine
+    profiles: ["backup"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts:ro
+    environment:
+      # Direct, not via PgBouncer — pg_dump uses session features (LOCK,
+      # SET, etc.) that PgBouncer's transaction pool mangles.
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/cms
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: cms-media
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      BACKUP_S3_PREFIX: backups/postgres
+      BACKUP_RETENTION_DAYS: "30"
+    # Alpine ships /bin/sh; install mc on the fly so the image stays the
+    # stock postgres:18-alpine. apk is fast (~3s); switch to a baked image
+    # if cold-start time ever matters.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        apk add --no-cache --quiet bash curl >/dev/null
+        curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
+        chmod +x /usr/local/bin/mc
+        exec bash /scripts/backup-postgres.sh
+    restart: "no"
+
+volumes:
+  postgres-data:
+  dragonfly-data:
+  meili-data:
+  minio-data:

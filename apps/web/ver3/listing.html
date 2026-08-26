@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="description" content="Browse all stories from Mill-Times Mumbai — community journalism documenting Mumbai's mill districts.">
+    <title>All Stories | Mill-Times Mumbai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F6F7F9;
+            --text: #111111;
+            --accent: #6C5CE7;
+            --teal: #0EA5A4;
+            --white: #FFFFFF;
+            --dark-panel: #1E1B4B;
+            --shadow: 0 25px 50px rgba(0,0,0,0.08);
+            --radius-curved: 40px;
+            --transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+        body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; min-width: 0; }
+        .container { max-width: 1240px; margin: 0 auto; padding: 0 25px; overflow: hidden; }
+        img { max-width: 100%; height: auto; }
+
+        /* TICKER */
+        .ticker { background: var(--text); color: white; padding: 12px 0; overflow: hidden; white-space: nowrap; display: flex; z-index: 1001; position: relative; }
+        .ticker-track { display: flex; animation: scroll 40s linear infinite; }
+        .ticker-content { display: flex; align-items: center; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; flex-shrink: 0; }
+        .ticker-badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; margin-right: 10px; font-size: 9px; }
+        .ticker-item { display: inline-flex; align-items: center; padding-right: 30px; }
+        @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        /* NAVIGATION */
+        nav { padding: 20px 0; background: rgba(246, 247, 249, 0.9); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .nav-flex { display: flex; justify-content: space-between; align-items: center; position: relative; }
+        .logo { text-decoration: none; display: inline-flex; align-items: center; }
+        .logo img { height: 32px; width: auto; display: block; }
+        .footer-logo img { height: 36px; width: auto; display: block; filter: brightness(0) invert(1); margin-bottom: 15px; }
+        .nav-links { display: flex; align-items: center; gap: 30px; }
+        .nav-links a { text-decoration: none; color: var(--text); font-size: 13px; font-weight: 700; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+        .nav-links a:hover { color: var(--accent); }
+        .btn-purple { background: var(--accent); color: white !important; padding: 12px 28px; border-radius: 50px; text-decoration: none; font-weight: 700; transition: 0.3s; box-shadow: 0 10px 20px rgba(108, 92, 231, 0.2); display: inline-flex; align-items: center; gap: 8px; }
+        .btn-purple:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(108, 92, 231, 0.3); }
+        .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 8px; -webkit-tap-highlight-color: transparent; }
+        .hamburger span { display: block; width: 22px; height: 2px; background: var(--text); margin: 5px 0; transition: 0.3s; border-radius: 2px; }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+        /* PAGE HEADER */
+        .page-header {
+            padding: 80px 0 40px;
+        }
+        .page-header h1 {
+            font-size: clamp(40px, 5vw, 64px);
+            font-weight: 800; letter-spacing: -3px;
+            line-height: 1.05; margin-bottom: 15px;
+        }
+        .page-header p {
+            font-size: 18px; opacity: 0.6; max-width: 600px;
+        }
+
+        /* CATEGORY FILTERS */
+        .filter-bar {
+            display: flex; gap: 10px; flex-wrap: nowrap;
+            padding: 20px 0 40px; border-bottom: 1px solid rgba(0,0,0,0.06);
+            margin-bottom: 50px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; -ms-overflow-style: none;
+        }
+        .filter-bar::-webkit-scrollbar { display: none; }
+        .filter-btn { white-space: nowrap; flex-shrink: 0; }
+        .filter-btn {
+            padding: 10px 22px; border-radius: 50px;
+            border: 1px solid rgba(0,0,0,0.1); background: var(--white);
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; cursor: pointer; transition: 0.3s;
+            font-family: inherit; color: var(--text);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--accent); color: white; border-color: var(--accent);
+        }
+
+        /* FEATURED STORY (top of listing) */
+        .listing-featured {
+            display: grid; grid-template-columns: 1.3fr 1fr; gap: 40px;
+            margin-bottom: 60px; align-items: center; min-width: 0;
+        }
+        .listing-featured > * { min-width: 0; }
+        .listing-featured-img {
+            width: 100%; aspect-ratio: 3/2; object-fit: cover;
+            border-radius: var(--radius-curved); display: block;
+            transition: var(--transition);
+        }
+        .listing-featured-img:hover { transform: scale(1.02); }
+        .listing-featured-body h2 a:hover { color: var(--accent) !important; }
+        .listing-featured-body h2 {
+            font-size: clamp(22px, 3.5vw, 36px); font-weight: 800; letter-spacing: -2px;
+            line-height: 1.1; margin-bottom: 15px;
+        }
+        .listing-featured-body p {
+            font-size: 16px; opacity: 0.6; line-height: 1.7; margin-bottom: 20px;
+        }
+        .listing-featured-body .meta {
+            font-size: 13px; opacity: 0.5; margin-bottom: 20px;
+        }
+        .badge-special { background: #F43F5E; padding: 6px 14px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; display: inline-block; color: white; }
+        .btn-outline {
+            border: 1px solid #ddd; padding: 12px 28px; border-radius: 50px;
+            text-decoration: none; font-weight: 700; color: var(--text);
+            font-size: 13px; text-transform: uppercase; display: inline-flex;
+            align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .btn-outline:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
+
+        /* STORY GRID */
+        .stories-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 30px; margin-bottom: 60px; min-width: 0;
+        }
+        .stories-grid > * { min-width: 0; }
+        .story-card {
+            background: var(--white); border-radius: 24px; overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.04); text-decoration: none;
+            color: inherit; transition: var(--transition); display: block;
+        }
+        .story-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
+        .story-card-img {
+            width: 100%; aspect-ratio: 3/2; object-fit: cover; display: block;
+        }
+        .story-card-body { padding: 25px; }
+        .story-card-body .card-cat {
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 2px; color: var(--accent); margin-bottom: 10px;
+        }
+        .story-card-body h3 {
+            font-size: 18px; font-weight: 800; line-height: 1.3;
+            margin-bottom: 10px;
+        }
+        .story-card-body p {
+            font-size: 13px; opacity: 0.6; line-height: 1.6; margin-bottom: 15px;
+        }
+        .story-card-body .card-meta {
+            font-size: 11px; opacity: 0.4; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .status-pill { font-size: 9px; font-weight: 800; padding: 4px 10px; border-radius: 5px; text-transform: uppercase; }
+        .trending { background: rgba(255, 69, 58, 0.1); color: #FF453A; }
+        .featured { background: rgba(108, 92, 231, 0.1); color: var(--accent); }
+        .verified { background: rgba(14, 165, 164, 0.1); color: var(--teal); }
+
+        /* LOAD MORE */
+        .load-more-wrap { text-align: center; padding: 20px 0 80px; }
+        .load-more-btn {
+            padding: 16px 40px; border-radius: 50px;
+            border: 2px solid rgba(0,0,0,0.1); background: transparent;
+            font-size: 13px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 1px; cursor: pointer; transition: 0.3s;
+            font-family: inherit; color: var(--text);
+        }
+        .load-more-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* PREMIUM FOOTER */
+        .site-footer { background: #000; color: #aaa; padding-top: 100px; margin-top: 0; border-radius: 60px 60px 0 0; }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 60px; min-width: 0; }
+        .footer-grid > * { min-width: 0; }
+        .footer-brand p { font-size: 14px; opacity: 0.7; max-width: 420px; }
+        .footer-coordinates { margin-top: 20px; font-size: 11px; opacity: 0.4; }
+        .footer-col h4, .footer-newsletter h4 { color: #fff; font-size: 12px; letter-spacing: 2px; margin-bottom: 18px; text-transform: uppercase; }
+        .footer-col a { display: block; text-decoration: none; color: #aaa; font-size: 14px; margin-bottom: 10px; transition: 0.25s; }
+        .footer-col a:hover { color: #fff; }
+        .footer-newsletter p { font-size: 14px; opacity: 0.7; margin-bottom: 15px; }
+        .newsletter-form { display: flex; gap: 10px; }
+        .newsletter-form input { flex: 1; padding: 12px; border-radius: 40px; border: none; background: #111; color: white; font-size: 14px; -webkit-appearance: none; }
+        .newsletter-form input::placeholder { color: rgba(255,255,255,0.5); }
+        .newsletter-form button { background: var(--accent); border: none; color: white; padding: 12px 20px; border-radius: 40px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 14px; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+        .newsletter-form button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3); }
+        .footer-bottom { border-top: 1px solid rgba(255,255,255,0.08); margin-top: 80px; padding: 25px 0; }
+        .bottom-flex { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .footer-links { display: flex; flex-wrap: wrap; gap: 15px; }
+        .footer-links a { color: #777; text-decoration: none; font-size: 13px; transition: 0.3s; }
+        .footer-links a:hover { color: #fff; }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .stories-grid { grid-template-columns: repeat(2, 1fr); }
+            .listing-featured { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 900px) {
+            .footer-grid { grid-template-columns: 1fr; gap: 40px; }
+            .newsletter-form { flex-direction: column; }
+            .bottom-flex { flex-direction: column; text-align: center; }
+        }
+        @media (max-width: 768px) {
+            .container { padding: 0 20px; }
+            .page-header { padding: 50px 0 30px; }
+            .page-header h1 { font-size: clamp(32px, 5vw, 48px); }
+            .page-header p { font-size: 16px; }
+            .stories-grid { grid-template-columns: 1fr; gap: 20px; }
+            .listing-featured-body h2 { font-size: 28px; }
+            nav { padding: 15px 0; }
+            .hamburger { display: flex; flex-direction: column; }
+            .nav-links {
+                display: none; flex-direction: column; gap: 0; width: 100%;
+                position: absolute; top: 100%; left: 0; right: 0;
+                background: rgba(246, 247, 249, 0.98); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px);
+                padding: 10px 25px 20px; border-bottom: 1px solid rgba(0,0,0,0.05);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.06);
+            }
+            .nav-links.open { display: flex; }
+            .nav-links a { font-size: 14px; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
+            .nav-links a:last-child { border-bottom: none; }
+            .btn-purple { width: 100%; justify-content: center; margin-top: 8px; }
+            .ticker-content { font-size: 10px; }
+            .ticker-badge { font-size: 8px; padding: 2px 6px; }
+            .footer-logo img { height: 30px; }
+        }
+        @media (max-width: 480px) {
+            .container { padding: 0 16px; }
+            .page-header { padding: 30px 0 20px; }
+            .page-header h1 { font-size: 28px; letter-spacing: -1px; }
+            .page-header p { font-size: 15px; }
+            .filter-btn { padding: 10px 18px; font-size: 12px; }
+            .filter-bar { margin-bottom: 30px; padding: 15px 0 25px; }
+            .story-card-body { padding: 20px; }
+            .story-card-body h3 { font-size: 16px; }
+            .story-card-body p { font-size: 13px; }
+            .listing-featured-body h2 { font-size: 22px; }
+            .listing-featured-body p { font-size: 14px; }
+            .site-footer { padding-top: 50px; border-radius: 30px 30px 0 0; }
+            .footer-grid { gap: 30px; }
+            .footer-logo img { height: 26px; }
+            .footer-brand p { font-size: 13px; }
+            .footer-coordinates { font-size: 12px; }
+            .footer-col h4, .footer-newsletter h4 { font-size: 12px; margin-bottom: 12px; }
+            .footer-col a { font-size: 14px; margin-bottom: 10px; }
+            .footer-newsletter p { font-size: 13px; }
+            .newsletter-form input { font-size: 14px; }
+            .newsletter-form button { font-size: 14px; }
+            .footer-links a { font-size: 13px; }
+            nav { padding: 12px 0; }
+            .logo img { height: 24px; }
+            .ticker-content { font-size: 10px; }
+        }
+        @media (hover: none) and (pointer: coarse) {
+            .btn-purple, .btn-outline, .filter-btn, .load-more-btn, .story-card, .newsletter-form button { min-height: 44px; }
+            .nav-links a { min-height: 44px; display: inline-flex; align-items: center; }
+            .footer-col a { min-height: 44px; display: flex; align-items: center; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+            html { scroll-behavior: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ticker">
+        <div class="ticker-track">
+            <div class="ticker-content">
+                <span class="ticker-item"><span class="ticker-badge">🔴 Breaking</span> Lower Parel Studio Walk this Sunday &nbsp;•&nbsp;</span>
+                <span class="ticker-item"><span class="ticker-badge">New</span> Heritage listing approved for Kohinoor Mills &nbsp;•&nbsp;</span>
+                <span class="ticker-item"><span class="ticker-badge">Trending</span> The Gentrification of Cotton Alley &nbsp;•&nbsp;</span>
+                <span class="ticker-item"><span class="ticker-badge">Live</span> 022 Photo Walk registration open &nbsp;•&nbsp;</span>
+            </div>
+            <div class="ticker-content" aria-hidden="true">
+                <span class="ticker-item"><span class="ticker-badge">🔴 Breaking</span> Lower Parel Studio Walk this Sunday &nbsp;•&nbsp;</span>
+                <span class="ticker-item"><span class="ticker-badge">New</span> Heritage listing approved for Kohinoor Mills &nbsp;•&nbsp;</span>
+                <span class="ticker-item"><span class="ticker-badge">Trending</span> The Gentrification of Cotton Alley &nbsp;•&nbsp;</span>
+                <span class="ticker-item"><span class="ticker-badge">Live</span> 022 Photo Walk registration open &nbsp;•&nbsp;</span>
+            </div>
+        </div>
+    </div>
+
+    <nav>
+        <div class="container nav-flex">
+            <a href="index.html" class="logo"><img src="mill-times-logo.png" alt="Mill Times"></a>
+            <button class="hamburger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+            <div class="nav-links">
+                <a href="listing.html">Stories</a>
+                <a href="about.html">About</a>
+                <a href="index.html#impact">Impact</a>
+                <a href="index.html#submit" class="btn-purple">Submit Story</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+            <span style="color:var(--accent); font-weight:800; font-size:11px; letter-spacing:2px;">ALL STORIES</span>
+            <h1>Stories from the 022</h1>
+            <p>Community-reported stories from Mumbai's mill districts — verified, edited, and published by our editorial team.</p>
+        </div>
+
+        <!-- CATEGORY FILTERS -->
+        <div class="filter-bar">
+            <button class="filter-btn active">All</button>
+            <button class="filter-btn">Heritage</button>
+            <button class="filter-btn">Community</button>
+            <button class="filter-btn">Investigations</button>
+            <button class="filter-btn">Dispatches</button>
+            <button class="filter-btn">Photo Essays</button>
+            <button class="filter-btn">Environment</button>
+        </div>
+
+        <!-- FEATURED TOP STORY -->
+        <div class="listing-featured">
+            <a href="article.html"><img class="listing-featured-img" src="https://images.unsplash.com/photo-1566552881560-0be862a7c445?q=80&w=1200" alt="The Concrete Lungs: How Old Chimneys Define New Skylines"></a>
+            <div class="listing-featured-body">
+                <span class="badge-special">● Special Report</span>
+                <h2><a href="article.html" style="text-decoration:none; color:inherit;">The Concrete Lungs: How Old Chimneys Define New Skylines</a></h2>
+                <div class="meta">By Kabir Architect · March 2, 2026 · 8 min read</div>
+                <p>The smokestacks of Mumbai's former textile mills rise above the city like fossilized vertebrae of a once-living industrial giant. A deep investigation into what these monuments mean for the future.</p>
+                <a href="article.html" class="btn-outline">Read Full Story →</a>
+            </div>
+        </div>
+
+        <!-- STORY GRID -->
+        <div class="stories-grid">
+            <a href="article.html" class="story-card">
+                <img class="story-card-img" src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=600" alt="The Untold Stories of Industrial Heritage">
+                <div class="story-card-body">
+                    <div class="card-cat">Heritage</div>
+                    <h3>The Untold Stories of Industrial Heritage</h3>
+                    <p>A deep dive into preservation efforts and cultural significance of mill districts across Mumbai.</p>
+                    <div class="card-meta">
+                        <span>By Priya Shah · 6 min</span>
+                        <span class="status-pill featured">⭐ Featured</span>
+                    </div>
+                </div>
+            </a>
+            <a href="article.html" class="story-card">
+                <img class="story-card-img" src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=600" alt="Community Voices: The Future of Urban Spaces">
+                <div class="story-card-body">
+                    <div class="card-cat">Community</div>
+                    <h3>Community Voices: The Future of Urban Spaces</h3>
+                    <p>Residents share their vision for sustainable development in their neighbourhoods.</p>
+                    <div class="card-meta">
+                        <span>By Anil Patil · 4 min</span>
+                        <span class="status-pill trending">🔥 Trending</span>
+                    </div>
+                </div>
+            </a>
+            <a href="article.html" class="story-card">
+                <img class="story-card-img" src="https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=600" alt="Documentary: Life After Industry">
+                <div class="story-card-body">
+                    <div class="card-cat">Dispatches</div>
+                    <h3>Documentary: Life After Industry</h3>
+                    <p>A visual narrative about adaptation and resilience in changing times across Mumbai's evolving landscape.</p>
+                    <div class="card-meta">
+                        <span>By Meena Das · 5 min</span>
+                        <span class="status-pill verified">✓ Verified</span>
+                    </div>
+                </div>
+            </a>
+            <a href="article.html" class="story-card">
+                <img class="story-card-img" src="https://images.unsplash.com/photo-1570168007204-dfb528c6958f?q=80&w=600" alt="Grassroots Initiative Transforms Local Community">
+                <div class="story-card-body">
+                    <div class="card-cat">Community</div>
+                    <h3>Grassroots Initiative Transforms Local Community</h3>
+                    <p>How citizen action led to meaningful environmental and social changes in Lower Parel.</p>
+                    <div class="card-meta">
+                        <span>By Rohit Khanna · 3 min</span>
+                        <span class="status-pill verified">✓ Verified</span>
+                    </div>
+                </div>
+            </a>
+            <a href="article.html" class="story-card">
+                <img class="story-card-img" src="https://images.unsplash.com/photo-1566552881560-0be862a7c445?q=80&w=600" alt="When Loom Sheds Became Lofts">
+                <div class="story-card-body">
+                    <div class="card-cat">Heritage</div>
+                    <h3>When Loom Sheds Became Lofts</h3>
+                    <p>The architectural transformation of Mumbai's mill buildings into contemporary living spaces.</p>
+                    <div class="card-meta">
+                        <span>By Anjali Bose · 5 min</span>
+                        <span class="status-pill featured">⭐ Featured</span>
+                    </div>
+                </div>
+            </a>
+            <a href="article.html" class="story-card">
+                <img class="story-card-img" src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=600" alt="Green Corridors: Parks on Former Mill Land">
+                <div class="story-card-body">
+                    <div class="card-cat">Environment</div>
+                    <h3>Green Corridors: Parks on Former Mill Land</h3>
+                    <p>How open space mandates are creating new public parks in the densest parts of the city.</p>
+                    <div class="card-meta">
+                        <span>By Rohan Desai · 4 min</span>
+                        <span class="status-pill trending">🔥 Trending</span>
+                    </div>
+                </div>
+            </a>
+            <a href="article.html" class="story-card">
+                <img class="story-card-img" src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=600" alt="The Water Question: Supply in the Mill Belt">
+                <div class="story-card-body">
+                    <div class="card-cat">Investigation</div>
+                    <h3>The Water Question: Supply in the Mill Belt</h3>
+                    <p>An investigation into how water distribution has changed as the character of these neighbourhoods shifts.</p>
+                    <div class="card-meta">
+                        <span>By Sunita Rao · 7 min</span>
+                        <span class="status-pill trending">🔥 Trending</span>
+                    </div>
+                </div>
+            </a>
+            <a href="article.html" class="story-card">
+                <img class="story-card-img" src="https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=600" alt="Voices of the Chawls">
+                <div class="story-card-body">
+                    <div class="card-cat">Photo Essay</div>
+                    <h3>Voices of the Chawls: A Photo Essay</h3>
+                    <p>Intimate portraits and stories from residents of Mumbai's iconic chawl housing.</p>
+                    <div class="card-meta">
+                        <span>By Farhan Ali · 6 min</span>
+                        <span class="status-pill featured">⭐ Featured</span>
+                    </div>
+                </div>
+            </a>
+            <a href="article.html" class="story-card">
+                <img class="story-card-img" src="https://images.unsplash.com/photo-1570168007204-dfb528c6958f?q=80&w=600" alt="Transit Lines Through History">
+                <div class="story-card-body">
+                    <div class="card-cat">Heritage</div>
+                    <h3>Transit Lines Through History</h3>
+                    <p>How Mumbai's railway and bus routes trace the paths first laid down by mill workers over a century ago.</p>
+                    <div class="card-meta">
+                        <span>By Vikram Joshi · 5 min</span>
+                        <span class="status-pill verified">✓ Verified</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- LOAD MORE -->
+        <div class="load-more-wrap">
+            <button class="load-more-btn">Load More Stories</button>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <a href="index.html" class="footer-logo"><img src="mill-times-logo.png" alt="Mill Times"></a>
+                <p>Journalism for the 022. A community-powered publication documenting Mumbai's mill districts, people and stories.</p>
+                <div class="footer-coordinates">Coordinates: 18.9930° N, 72.8273° E</div>
+            </div>
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <a href="listing.html">Stories</a>
+                <a href="listing.html?cat=investigations">Investigations</a>
+                <a href="listing.html?cat=dispatches">Dispatches</a>
+                <a href="listing.html?cat=photo-essays">Photo Essays</a>
+                <a href="listing.html">Archive</a>
+            </div>
+            <div class="footer-col">
+                <h4>Community</h4>
+                <a href="index.html#submit">Submit Story</a>
+                <a href="contact.html">Become Contributor</a>
+                <a href="listing.html">Events</a>
+                <a href="editorial-policy.html">Editorial Policy</a>
+                <a href="about.html">About Us</a>
+                <a href="contact.html">Contact</a>
+            </div>
+            <div class="footer-newsletter">
+                <h4>Weekly Dispatch</h4>
+                <p>Get the most important Mumbai stories — once a week.</p>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email address" required>
+                    <button type="submit">Join</button>
+                </form>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container bottom-flex">
+                <p>&copy; 2026 Mill-Times Mumbai</p>
+                <div class="footer-links">
+                    <a href="privacy.html">Privacy</a>
+                    <a href="terms.html">Terms</a>
+                    <a href="editorial-policy.html">Ethics</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    document.querySelector('.hamburger').addEventListener('click', function() {
+        this.classList.toggle('active');
+        this.setAttribute('aria-expanded', this.classList.contains('active'));
+        document.querySelector('.nav-links').classList.toggle('open');
+    });
+    document.querySelectorAll('.nav-links a').forEach(function(link) {
+        link.addEventListener('click', function() {
+            document.querySelector('.hamburger').classList.remove('active');
+            document.querySelector('.hamburger').setAttribute('aria-expanded', 'false');
+            document.querySelector('.nav-links').classList.remove('open');
+        });
+    });
+    </script>
+</body>
+</html>

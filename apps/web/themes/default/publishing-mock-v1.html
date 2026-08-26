@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PING — /publishing page mock v1</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap"
+    />
+
+    <!-- THE REAL STYLESHEET, same trick design-guide.html uses: link it rather
+         than copy it, so every token below is whatever the theme says right now. -->
+    <link rel="stylesheet" href="./app/assets/css/theme.css" />
+
+    <style>
+      /* ══════════════════════════════════════════════════════════════════════
+         /publishing — MOCK v1
+
+           1 hero        ← page-hero        (shared, curve = "swell")
+           2/3/4 showcase← property-showcase (NEW, one block used three times)
+           5 philosophy  ← capability-grid  (shared)
+           6 impact      ← work-grid        (shared)
+           7 cta         ← cta-panel        (shared)
+
+         Only ONE new block on this page. Sections 2-4 are the same block with
+         the picture side alternating, the way shield-model repeats on
+         /ping-shield.
+
+         Band rhythm, never two the same in a row:
+           #4295f8 → #ffffff → #92deff → #ffffff → #92deff → #ffffff → #ffffff*
+         (*the last is a white band carrying a navy panel, so it still reads as
+         a change.)
+
+         NO UPPERCASE EYEBROWS. CONTENT ENGINES / FLAGSHIP IP / OUR PHILOSOPHY
+         become the 34px Title Case kicker, or are dropped. LIFESTYLE & FOOD
+         stays small but is Title Case and orange — it is a category tag, not an
+         eyebrow, and it is the one place a small label is genuinely useful.
+         ══════════════════════════════════════════════════════════════════ */
+
+      /* ── MOCK CHROME (.mk-) — labels + toggle. Not part of the design. ─── */
+      .mk-bar {
+        position: sticky; top: 0; z-index: 50;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+        background: #0a1a5c; color: #cddcff; padding: 9px 18px; font-size: 13px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .mk-bar b { color: #fff; letter-spacing: 0.04em; }
+      .mk-bar span { opacity: 0.75; }
+      .mk-bar button {
+        margin-left: auto; background: #ff6a4d; color: #fff; border: 0;
+        border-radius: 999px; padding: 6px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+      }
+      .mk-tag {
+        display: block; background: #0a1a5c; color: #92deff;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px; line-height: 1.5; padding: 7px 18px;
+      }
+      .mk-tag b { color: #fff; }
+      .mk-tag i { color: #ffb4a1; font-style: normal; }
+      body.mk-clean .mk-tag { display: none; }
+
+      /* ══════════════════════════════════════════════════════════════════════
+         SECTION 1 — page-hero (shared block, curve = "swell")
+         ══════════════════════════════════════════════════════════════════ */
+      .ph { position: relative; overflow: hidden; background: #4295f8; padding: var(--space-12) 0; }
+      .ph-curve {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        z-index: 0; pointer-events: none;
+      }
+      .ph-inner { position: relative; z-index: 1; }
+      .ph-heading {
+        color: #ffffff; font-size: var(--fs-h1); font-weight: var(--fw-semibold);
+        line-height: var(--lh-tight); max-width: 760px; margin: 0 0 var(--space-5);
+        white-space: pre-line;
+      }
+      .ph-subtext {
+        color: #ffffff; font-size: var(--fs-lead); font-weight: var(--fw-regular);
+        line-height: var(--lh-body); max-width: 600px; margin: 0 0 var(--space-6);
+      }
+      .ph-cta {
+        display: inline-flex; align-items: center; background: #ff6a4d; color: #fff;
+        font-weight: var(--fw-semibold); font-size: calc(var(--fs-sm) + 1px);
+        padding: calc(var(--space-3) - 1px) calc(var(--space-8) + 4px);
+        border-radius: 999px; text-decoration: none; transition: background 0.2s;
+      }
+      .ph-cta:hover { background: #e0532f; }
+
+      /* ══════════════════════════════════════════════════════════════════════
+         SECTIONS 2/3/4 — property-showcase  (NEW)
+         A big product screenshot on one side, the story on the other. The side
+         alternates via .ps--flip. Each instance shows EITHER a 3-number row or
+         a bullet list — whichever the entry fills in.
+         ══════════════════════════════════════════════════════════════════ */
+      .ps { position: relative; overflow: hidden; background: #ffffff; padding: var(--section-y) 0; }
+      /* Alternating band tint, so three showcases in a row do not read as one
+         long slab. The flipped one takes the sky band. */
+      .ps--flip { background: #92deff; }
+      /* The orange stroke sits in the OUTER MARGIN, right of the 1200px
+         container, so it never runs under navy text — orange behind body copy
+         is unreadable. BlockShieldHow keeps its orange curves off the text half
+         for the same reason. It bleeds off the top and bottom edges, so it reads
+         as one line running the full height of the band. */
+      /* ── ONE page-long orange stroke ──────────────────────────────────────
+         A single SVG behind the entire document, not one per section. Sections
+         with a solid colour cover it; the white ones are transparent, so the
+         same continuous line surfaces through each in a different place.
+         preserveAspectRatio="none" lets it stretch to the real page height,
+         which is not knowable up front. */
+      .page { position: relative; background: #ffffff; }
+      .page-art {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      .page-art svg { display: block; width: 100%; height: 100%; }
+      /* Above the stroke. Sections keep their own background where they have
+         one; the white bands opt out further down so the stroke shows through. */
+      section { position: relative; z-index: 1; }
+      /* Everything the section actually says sits above the stroke. */
+      .ps-shell { position: relative; z-index: 1; }
+      .ps-media,
+      .ps-copy { position: relative; z-index: 1; }
+      /* The section opener, shown only on the first instance. */
+      .ps-kicker {
+        color: #0f2d96; font-size: calc(var(--fs-h2) - 4px); font-weight: var(--fw-bold);
+        line-height: var(--lh-tight); margin: 0 0 var(--space-8);
+      }
+      .ps-inner {
+        position: relative;
+        display: grid;
+        /* fr, not %, so the --space-9 gap cannot push the row past 100%. */
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        gap: var(--space-9);
+        align-items: center;
+      }
+      /* Flipping only the ORDER keeps the DOM in reading order — copy still
+         follows the picture for a screen reader. */
+      .ps--flip .ps-media { order: 2; }
+      /* Portrait, not landscape. These are full-page website screenshots, which
+         are tall — and a landscape box made the split row only ~360px high, so
+         the orange stroke beside it came out wider than it was tall. */
+      .ps-shot { width: 100%; aspect-ratio: 4 / 5; border-radius: 20px; overflow: hidden; }
+      .ps-photo, .ps-ph { width: 100%; height: 100%; display: block; object-fit: cover; }
+      /* Navy for the same reason as the stat number — small orange text over an
+         orange wash drops to ~2.5:1 and the first word of "Lifestyle & Food"
+         was being eaten by the stroke. The orange on this page is carried by
+         the curve itself, not by the type. */
+      .ps-category {
+        color: #0f2d96; font-size: var(--fs-sm); font-weight: var(--fw-bold);
+        margin: 0 0 var(--space-2);
+      }
+      /* --fs-h2, the size PING gives a section's own title (.sm-title on the
+         shield models, .hw-heading on shield-how). --fs-h3 read as a card title
+         and made the section look like a listing rather than a feature. */
+      .ps-title {
+        color: #0f2d96; font-size: var(--fs-h2); font-weight: var(--fw-bold);
+        line-height: var(--lh-tight); margin: 0 0 var(--space-4);
+      }
+      /* The one place the page still misses a contrast bar. Navy on solid
+         #ff6a4d is 3.9:1 — fine for anything 24px and up (needs 3:1), which is
+         every other role here, but body copy needs 4.5:1. Everything large is
+         clear; only this paragraph is short, and only where the stroke crosses
+         it. Left as-is because the solid orange was asked for; the fixes if it
+         matters later are a lighter fill, a narrower stroke, or routing the
+         stroke off the copy column. */
+      .ps-body {
+        color: #0f2d96; font-size: var(--fs-body); line-height: var(--lh-body);
+        max-width: 54ch; margin: 0 0 var(--space-5);
+      }
+      .ps-rule {
+        border: 0; border-top: 1px solid rgba(15, 45, 150, 0.2);
+        margin: 0 0 var(--space-5);
+      }
+      .ps-rule--wide { margin: var(--space-9) 0 var(--space-7); }
+      .ps-stats {
+        list-style: none; margin: 0; padding: 0;
+        display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-6);
+      }
+      .ps-stats li { display: flex; flex-direction: column; }
+      /* THE PING stat recipe — the same expression as home's "12+",
+         BlockImpactStats, BlockShieldHow and BlockShieldStats. Keep it as the
+         calc(), not the resolved 90px, so it tracks the scale on mobile.
+         NAVY, not orange: the page stroke passes behind these numbers, and an
+         orange number on an orange wash is invisible. BlockImpactStats sets the
+         same precedent — its numbers go navy precisely because its band is
+         orange. */
+      .ps-stat-value {
+        color: #0f2d96; font-size: calc(var(--fs-display) + 16px);
+        font-weight: var(--fw-bold); line-height: 1;
+      }
+      .ps-stat-label {
+        color: #0f2d96; font-size: calc(var(--fs-h3) - 2px);
+        font-weight: var(--fw-medium); line-height: var(--lh-snug);
+        max-width: 14ch; margin-top: var(--space-3);
+      }
+      .ps-points { list-style: none; margin: 0 0 var(--space-6); padding: 0;
+        display: flex; flex-direction: column; gap: var(--space-4); }
+      /* --fs-h3 bold, matching .sm-list li — PING's bulleted feature list. At
+         --fs-body they read as fine print next to a 38px title. */
+      .ps-points li {
+        position: relative; padding-left: var(--space-7);
+        color: #0f2d96; font-size: var(--fs-h3); font-weight: var(--fw-medium);
+        line-height: var(--lh-snug);
+      }
+      /* An orange dot, drawn rather than a list-style marker so its size and
+         colour do not depend on the font. Sized off the text it sits beside. */
+      .ps-points li::before {
+        content: ''; position: absolute; left: 0; top: 0.42em;
+        width: 11px; height: 11px; border-radius: 50%; background: #ff6a4d;
+      }
+      .ps-points b { font-weight: var(--fw-bold); }
+      /* Navy with a navy rule under it. "Visit IFN" in orange sat right on the
+         stroke and half of it vanished; bold + underlined still reads as a link
+         without needing the accent colour. */
+      .ps-link {
+        color: #0f2d96; font-size: var(--fs-body); font-weight: var(--fw-bold);
+        text-decoration: none; border-bottom: 2px solid currentColor; padding-bottom: 2px;
+      }
+      .ps-link:hover { color: #ff6a4d; }
+
+      /* ══════════════════════════════════════════════════════════════════════
+         SECTION 5 — capability-grid (shared block, 3 cards here rather than 6)
+         ══════════════════════════════════════════════════════════════════ */
+      .cg { background: #ffffff; padding: var(--section-y) 0; }
+      .cg-kicker {
+        color: #0f2d96; font-size: calc(var(--fs-h2) - 4px); font-weight: var(--fw-bold);
+        line-height: var(--lh-tight); margin: 0 0 var(--space-4);
+      }
+      .cg-subtitle {
+        color: #0f2d96; font-size: var(--fs-body); line-height: var(--lh-body);
+        max-width: 560px; margin: 0 0 var(--space-8);
+      }
+      .cg-grid {
+        list-style: none; margin: 0; padding: 0; display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6);
+      }
+      .cg-card { background: #0f2d96; border-radius: 18px; padding: var(--space-6); }
+      .cg-icon { width: 34px; height: 34px; color: #92deff; margin-bottom: var(--space-5); }
+      .cg-card-title {
+        color: #ffffff; font-size: var(--fs-h4); font-weight: var(--fw-semibold);
+        line-height: var(--lh-snug); margin: 0 0 var(--space-3);
+      }
+      .cg-card-desc {
+        color: rgba(255, 255, 255, 0.85); font-size: var(--fs-body);
+        line-height: var(--lh-body); margin: 0;
+      }
+
+      /* ══════════════════════════════════════════════════════════════════════
+         SECTION 6 — work-grid (shared block) — also reads the publishing CPT
+         ══════════════════════════════════════════════════════════════════ */
+      .wg { background: #92deff; padding: var(--section-y) 0; }
+      .wg-kicker {
+        color: #0f2d96; font-size: calc(var(--fs-h2) - 4px); font-weight: var(--fw-bold);
+        line-height: var(--lh-tight); margin: 0 0 var(--space-4);
+      }
+      .wg-subtitle {
+        color: #0f2d96; font-size: var(--fs-body); line-height: var(--lh-body);
+        max-width: 560px; margin: 0 0 var(--space-8);
+      }
+      .wg-grid {
+        list-style: none; margin: 0; padding: 0; display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-7);
+      }
+      .wg-card { display: flex; flex-direction: column; }
+      .wg-thumb { width: 100%; aspect-ratio: 16 / 9; border-radius: 20px; overflow: hidden; }
+      .wg-ph { width: 100%; height: 100%; display: block; }
+      .wg-card-title {
+        color: #0f2d96; font-size: var(--fs-h3); font-weight: var(--fw-bold);
+        line-height: var(--lh-snug); margin: var(--space-4) 0 0;
+      }
+      .wg-card-excerpt {
+        color: #0f2d96; font-size: var(--fs-body); line-height: var(--lh-body);
+        margin: var(--space-3) 0 0;
+      }
+
+      /* ══════════════════════════════════════════════════════════════════════
+         SECTION 7 — cta-panel (shared block)
+         ══════════════════════════════════════════════════════════════════ */
+      .cp { background: #ffffff; padding: var(--section-y) 0; }
+      .cp-panel {
+        background: #0f2d96; border-radius: 28px;
+        padding: var(--space-12) var(--space-9); text-align: center;
+      }
+      .cp-heading {
+        color: #ffffff; font-size: var(--fs-h1); font-weight: var(--fw-bold);
+        line-height: var(--lh-tight); max-width: 20ch; margin: 0 auto var(--space-4);
+      }
+      .cp-subtext {
+        color: rgba(255, 255, 255, 0.85); font-size: var(--fs-lead);
+        line-height: var(--lh-body); max-width: 620px; margin: 0 auto var(--space-7);
+      }
+      .cp-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--space-4); }
+      .cp-btn {
+        display: inline-flex; align-items: center; background: #ff6a4d; color: #fff;
+        border-radius: 999px; font-size: calc(var(--fs-sm) + 1px); font-weight: var(--fw-semibold);
+        padding: calc(var(--space-3) - 1px) calc(var(--space-8) + 4px);
+        text-decoration: none; transition: background 0.2s;
+      }
+      .cp-btn:hover { background: #e0532f; }
+      .cp-btn--ghost { background: transparent; color: #ffffff; box-shadow: inset 0 0 0 2px #ffffff; }
+      .cp-btn--ghost:hover { background: #ffffff; color: #0f2d96; }
+
+      /* ── The white bands, made transparent ────────────────────────────────
+         Placed AFTER every section rule on purpose: .cg and .cp each set a
+         white background above at the same specificity, so an earlier override
+         would simply lose to them. These
+         four are the bands the page stroke shows through; everything else keeps
+         a solid colour and hides it. */
+      .ps:not(.ps--flip),
+      .cg,
+      .cp { background: transparent; }
+
+      /* ── Breakpoints: 768 and 1024 only, per the design guide ───────────── */
+      @media (max-width: 1024px) {
+        .cg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+      @media (max-width: 768px) {
+        .ph-curve { display: none; }
+        /* Kept on phones too — it is a background wash behind the whole band,
+           not an edge strip, so stacking does not break it. */
+        .ps-inner { grid-template-columns: 1fr; gap: var(--space-7); }
+        /* Picture always first on a phone, whichever side it sits on wide. */
+        .ps--flip .ps-media { order: -1; }
+        /* Three 62px numbers will not sit across 375px — one per row. */
+        .ps-stats { grid-template-columns: 1fr; gap: var(--space-6); }
+        .ps-stat-label { max-width: none; }
+        .ps-rule--wide { margin: var(--space-7) 0 var(--space-6); }
+        .cg-grid { grid-template-columns: 1fr; }
+        .wg-grid { grid-template-columns: 1fr; gap: var(--space-6); }
+        .cp-panel { padding: var(--space-8) var(--space-5); border-radius: 20px; }
+        .cp-actions { flex-direction: column; align-items: stretch; }
+        .cp-btn { justify-content: center; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="mk-bar">
+      <b>MOCK v1 — /publishing</b>
+      <span>7 sections · 1 new block · single-stroke curve · dummy copy</span>
+      <button type="button" id="mk-toggle">Hide labels</button>
+    </div>
+
+    <div class="page">
+      <!-- THE page's only orange art: one stroke, one <svg>, behind every
+           section. It is never repeated — the white bands are transparent, so
+           each one reveals a different stretch of the same continuous line. -->
+      <div class="page-art" aria-hidden="true">
+        <svg viewBox="0 0 1440 4200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- The brand orange at full strength, as specified. What made the
+               earlier version unreadable was not the colour but the TEXT on it:
+               the stat number, category and link were also orange and vanished
+               into it. Those are navy now, so nothing disappears. See the note
+               on .ps-body for the one contrast figure this leaves. -->
+          <path d="M1242.3 -294.7 L1224.8 -272.1 L1199.4 -242.5 L1167.8 -207.5 L1131.2 -167.9 L1090.9 -124.4 L1047.9 -77.6 L1003.4 -28.1 L958.3 23.6 L913.8 77 L870.9 131.5 L830.6 186.7 L793.9 242.3 L761.9 298 L735.7 353.5 L716.5 408.9 L706 464.4 L707 521.6 L719.7 576.3 L741.3 628 L769.6 677.2 L802.7 724.5 L839.1 770.6 L877.5 815.7 L916.5 859.9 L954.7 903.4 L990.7 946.1 L1023.1 988 L1050.5 1028.6 L1071.7 1067.6 L1085.7 1104.5 L1092.2 1138.9 L1091 1171.8 L1081.2 1205.5 L1061.4 1243.1 L1032.1 1283.4 L994.5 1325.5 L950.2 1368.8 L900.8 1412.9 L847.9 1457.6 L793.2 1502.7 L738.2 1548.3 L684.4 1594.3 L633.4 1640.9 L586.6 1688.3 L545.5 1736.8 L511.8 1787.1 L487.4 1839.9 L475.2 1896 L478.1 1952.8 L494.4 2006.8 L520.7 2057.9 L554.8 2106.7 L594.6 2154 L638.7 2200.3 L685.4 2246 L733.2 2291 L780.6 2335.6 L826 2379.6 L867.6 2423 L904 2465.6 L933.5 2506.8 L954.8 2546.2 L966.9 2583 L969.7 2617.5 L963.2 2651.6 L947.1 2687.3 L921.6 2724.7 L887.6 2763.2 L846.6 2802.6 L800.2 2842.6 L750 2883.5 L697.6 2925.2 L644.7 2968.2 L592.8 3012.7 L543.5 3059.1 L498.3 3107.9 L458.8 3159.7 L426.9 3215.1 L404.7 3274.4 L394.4 3337.9 L396.2 3404.4 L407.4 3475.6 L426.4 3550.9 L452.2 3629.6 L483.4 3710.9 L519 3793.7 L557.9 3877.1 L599 3960 L641.1 4041.3 L683.2 4120 L724.1 4194.8 L762.7 4264.8 L797.9 4328.8 L828.6 4385.5 L853.5 4433.8 L871.4 4472 L928.6 4448 L909.7 4406.3 L884.5 4356.2 L854 4298.4 L819.2 4233.9 L781.1 4163.7 L740.9 4089 L699.7 4010.7 L658.5 3930 L618.6 3848.1 L581 3766.1 L546.8 3685.2 L517.2 3606.6 L493.3 3531.6 L476.1 3461.5 L466.6 3397.8 L465.6 3342.1 L474 3293.6 L492.2 3246.7 L519.3 3200.8 L554.2 3155.8 L595.8 3111.8 L642.4 3068.7 L692.6 3026.4 L744.9 2984.8 L797.6 2943.5 L849.3 2902.2 L898.4 2860.6 L943.6 2818 L983.3 2773.9 L1015.9 2727.2 L1039.2 2676.9 L1050.3 2622.5 L1046.6 2567 L1029.9 2513.8 L1003.5 2463.2 L969.4 2414.4 L929.6 2367 L885.7 2320.4 L839.3 2274.4 L791.8 2229 L744.9 2184 L700.3 2139.7 L659.5 2096 L624.3 2053.3 L596.2 2012.1 L576.5 1973.2 L566.1 1937.2 L564.8 1904 L572.8 1870 L590.7 1832.8 L618.1 1792.9 L654.2 1751.2 L697.3 1708.4 L745.9 1664.8 L798.3 1620.6 L853.1 1576 L908.5 1531.1 L963.1 1485.7 L1015.5 1439.7 L1064.1 1393.1 L1107.4 1345.4 L1144.1 1296 L1172.2 1243.9 L1189 1188.2 L1191.9 1131.8 L1182.5 1077.4 L1163.6 1025.5 L1137.5 975.9 L1106 928.2 L1070.8 881.7 L1033.2 836.1 L994.7 791.4 L956.7 747.3 L920.5 704 L887.6 661.5 L859.3 620.2 L837.1 580.5 L821.9 543 L814.2 508.2 L814 475.6 L821.7 438.3 L837 396 L859.3 349.9 L888 301.3 L921.8 250.9 L959.9 199.8 L1001 148.4 L1044.2 97.6 L1088.3 47.9 L1132.2 -0.1 L1175 -45.9 L1215.6 -88.8 L1253.1 -128.5 L1286.4 -164.5 L1314.8 -196.7 L1337.7 -225.3Z" fill="#FF6A4D" />
+        </svg>
+      </div>
+
+    <!-- ───────────────────────────────────────────────────── SECTION 1 -->
+    <p class="mk-tag">
+      SECTION 1 · block <b>page-hero</b> · <i>shared with /brands and /platforms</i> ·
+      curve = <b>"swell"</b>, one continuous stroke, distinct from the other two pages ·
+      "CONTENT ENGINES" dropped — the live home hero has no eyebrow
+    </p>
+
+    <section class="ph">
+      <svg class="ph-curve" viewBox="0 0 1440 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <path d="M-157.1 532.7 L-141.6 528.9 L-122.5 524.3 L-100.4 519.1 L-75.6 513.3 L-48.6 507 L-19.8 500.4 L10.3 493.5 L41.3 486.5 L72.8 479.4 L104.2 472.4 L135.1 465.5 L165.1 458.9 L193.7 452.6 L220.5 446.8 L246.8 441.1 L272.8 435.3 L298.5 429.4 L323.9 423.5 L349.1 417.7 L374 412 L398.7 406.5 L423.1 401.3 L447.2 396.3 L471.1 391.6 L494.7 387.4 L518.1 383.6 L541.1 380.3 L564 377.5 L587.2 375.1 L610.5 373.1 L633.7 371.4 L656.9 370 L679.9 369 L702.8 368.3 L725.5 368 L747.9 367.9 L770 368.3 L791.8 368.9 L813.1 370 L834.1 371.3 L854.5 373 L874.4 375.1 L893.1 377.6 L911.4 380.6 L929.3 384.3 L947 388.4 L964.5 393 L981.8 397.9 L999 403.2 L1016.1 408.7 L1033.3 414.3 L1050.5 420 L1067.7 425.7 L1085.2 431.3 L1102.8 436.7 L1120.7 441.9 L1137.3 446.7 L1153.8 451.6 L1170.2 456.7 L1186.4 462 L1202.7 467.2 L1218.9 472.5 L1235.2 477.8 L1251.7 483 L1268.3 488 L1285.1 492.8 L1302.2 497.3 L1319.5 501.5 L1337.3 505.3 L1355.4 508.7 L1374.5 511.7 L1394.7 514.2 L1415.8 516.5 L1437.4 518.4 L1459.4 520.1 L1481.3 521.5 L1502.9 522.6 L1523.8 523.6 L1543.9 524.5 L1562.6 525.2 L1579.8 525.7 L1595.1 526.2 L1608.1 526.6 L1618.5 526.9 L1621.5 497.1 L1610.6 495.5 L1597.4 493.9 L1582.1 492.3 L1564.9 490.6 L1546.3 488.7 L1526.5 486.7 L1505.9 484.6 L1484.7 482.3 L1463.2 479.7 L1441.9 477 L1421.1 474 L1401 470.7 L1382 467.1 L1364.6 463.3 L1348.1 459.1 L1332 454.4 L1316 449.4 L1300.3 444.1 L1284.7 438.4 L1269.1 432.5 L1253.5 426.5 L1237.9 420.2 L1222.1 413.8 L1206.2 407.4 L1190 401 L1173.5 394.6 L1156.6 388.3 L1139.3 382.1 L1123.1 376.2 L1106.7 370 L1090.3 363.5 L1073.7 356.8 L1056.9 350 L1039.7 343.1 L1022.3 336.3 L1004.4 329.6 L986.1 323.1 L967.2 316.9 L947.8 311.1 L927.8 305.8 L907.1 301 L885.6 296.9 L864.2 293.5 L842.4 290.4 L820.1 287.8 L797.3 285.5 L774.2 283.5 L750.8 282 L727 280.8 L703 280 L678.8 279.5 L654.4 279.4 L629.9 279.6 L605.3 280.2 L580.7 281.2 L556 282.5 L530.8 284.3 L505.6 286.7 L480.3 289.6 L455 292.9 L429.7 296.7 L404.3 300.7 L378.8 305 L353.3 309.4 L327.8 314.1 L302.2 318.8 L276.6 323.5 L250.9 328.1 L225.2 332.7 L199.5 337.2 L172 341.9 L142.8 347.1 L112.3 352.6 L80.9 358.4 L49.1 364.3 L17.3 370.3 L-14.1 376.2 L-44.5 382 L-73.6 387.5 L-100.9 392.6 L-125.9 397.2 L-148.3 401.3 L-167.4 404.7 L-182.9 407.3Z" fill="#92DEFF" />
+      </svg>
+      <div class="container-custom ph-inner">
+        <h1 class="ph-heading">We don’t just support creators — we build publishing engines.</h1>
+        <p class="ph-subtext">
+          From formats to distribution, we run media properties that ship content
+          consistently across platforms.
+        </p>
+        <a class="ph-cta" href="/contact">Work With Us</a>
+      </div>
+    </section>
+
+    <p class="mk-tag">
+      ↓ SECTIONS 2–4 · the same block <b>property-showcase</b> three times, picture side
+      alternating. "FLAGSHIP IP / Our Original Properties" becomes an optional section
+      opener on the FIRST instance only — the other two leave it empty, so the three
+      share one heading without needing a separate block.
+    </p>
+
+    <p class="mk-tag">
+      SECTION 2 · block <b>property-showcase</b> · <i>NEW, instance 1 of 3</i> ·
+      picture LEFT, copy RIGHT — the side alternates ·
+      <b>READS THE NEW `publishing` CPT</b> · shows the 3-number row
+    </p>
+
+    <section class="ps">
+      <div class="container-custom ps-shell">
+        <h2 class="ps-kicker">Our Original Properties</h2>
+        <div class="ps-inner">
+        <div class="ps-media">
+          <div class="ps-shot"><div class="ps-ph" style="background: #0f2d96"></div></div>
+        </div>
+        <div class="ps-copy">
+          <p class="ps-category">Lifestyle & Food</p>
+          <h3 class="ps-title">India Food Network (IFN)</h3>
+          <p class="ps-body">A multi-format publishing engine defining the modern digital food experience in India through video, live commerce, and editorial storytelling.</p>
+
+          <a class="ps-link" href="#">Visit IFN</a>
+        </div>
+        </div>
+
+        <!-- Stats sit FULL WIDTH under the split, not inside the copy column.
+             PING's stat number is 90px and three of those will not fit in half a
+             page — the reference put them in the column at a third of that size,
+             which is what made this section stop looking like PING. -->
+        <hr class="ps-rule ps-rule--wide" />
+        <ul class="ps-stats">
+          <li><span class="ps-stat-value">100+</span><span class="ps-stat-label">Videos / Month</span></li>
+          <li><span class="ps-stat-value">5+</span><span class="ps-stat-label">Platforms</span></li>
+          <li><span class="ps-stat-value">2M+</span><span class="ps-stat-label">Reach</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <p class="mk-tag">
+      SECTION 3 · block <b>property-showcase</b> · <i>NEW, instance 2 of 3</i> ·
+      copy LEFT, picture RIGHT — the side alternates ·
+      <b>READS THE NEW `publishing` CPT</b> · shows the ticked bullet list
+    </p>
+
+    <section class="ps ps--flip">
+      <div class="container-custom ps-shell">
+        <div class="ps-inner">
+        <div class="ps-media">
+          <div class="ps-shot"><div class="ps-ph" style="background: #4295f8"></div></div>
+        </div>
+        <div class="ps-copy">
+          <p class="ps-category">Lifestyle & Food</p>
+          <h3 class="ps-title">Start2Bake — India’s Online Baking School</h3>
+          <p class="ps-body">A standout online baking academy bringing quality baking education straight to your kitchen. Learn from expert-led live and pre-recorded sessions, explore styles from breads to desserts, and master skills at your own pace.</p>
+          <hr class="ps-rule" />
+          <ul class="ps-points">
+            <li><b>100+</b> Baking Classes (Live &amp; Recorded)</li>
+            <li><b>Expert Chefs</b> From a renowned baking community</li>
+            <li><b>Thousands</b> of passionate home bakers</li>
+          </ul>
+          <a class="ps-link" href="#">Visit Start2Bake</a>
+        </div>
+        </div>
+
+      </div>
+    </section>
+
+    <p class="mk-tag">
+      SECTION 4 · block <b>property-showcase</b> · <i>NEW, instance 3 of 3</i> ·
+      picture LEFT, copy RIGHT — the side alternates ·
+      <b>READS THE NEW `publishing` CPT</b> · shows the 3-number row
+    </p>
+
+    <section class="ps">
+      <div class="container-custom ps-shell">
+        <div class="ps-inner">
+        <div class="ps-media">
+          <div class="ps-shot"><div class="ps-ph" style="background: #0f2d96"></div></div>
+        </div>
+        <div class="ps-copy">
+          <p class="ps-category">Lifestyle & Food</p>
+          <h3 class="ps-title">Kabita’s Kitchen Mix</h3>
+          <p class="ps-body">A creative culinary hub bringing home-style recipes and kitchen inspiration straight to food lovers — from simple everyday meals to delightful treats, with easy-to-follow guidance and engaging food content.</p>
+
+          <a class="ps-link" href="#">Visit Kabita’s Kitchen Mix</a>
+        </div>
+        </div>
+
+        <!-- Stats sit FULL WIDTH under the split, not inside the copy column.
+             PING's stat number is 90px and three of those will not fit in half a
+             page — the reference put them in the column at a third of that size,
+             which is what made this section stop looking like PING. -->
+        <hr class="ps-rule ps-rule--wide" />
+        <ul class="ps-stats">
+          <li><span class="ps-stat-value">150+</span><span class="ps-stat-label">Recipes / Month</span></li>
+          <li><span class="ps-stat-value">3+</span><span class="ps-stat-label">Platforms</span></li>
+          <li><span class="ps-stat-value">500K+</span><span class="ps-stat-label">Monthly Food Lovers</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────────────────────────────────── SECTION 5 -->
+    <p class="mk-tag">
+      SECTION 5 · block <b>capability-grid</b> · <i>the /platforms block reused</i> ·
+      3 cards here instead of 6 — the grid just fills the row · "OUR PHILOSOPHY" merges
+      into the kicker
+    </p>
+
+    <section class="cg">
+      <div class="container-custom">
+        <h2 class="cg-kicker">What Publishing Teaches You</h2>
+        <p class="cg-subtitle">
+          Three things running our own media properties taught us, that we now bring
+          to every partner programme.
+        </p>
+        <ul class="cg-grid">
+          <li class="cg-card">
+            <svg class="cg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3" />
+            </svg>
+            <h3 class="cg-card-title">Consistency beats noise</h3>
+            <p class="cg-card-desc">Scaling content requires systems that can ship quality daily, not just in bursts.</p>
+          </li>
+          <li class="cg-card">
+            <svg class="cg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+            </svg>
+            <h3 class="cg-card-title">Distribution is king</h3>
+            <p class="cg-card-desc">Content is only as good as the systems that get it in front of the right audience.</p>
+          </li>
+          <li class="cg-card">
+            <svg class="cg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 9h18M3 15h18" />
+            </svg>
+            <h3 class="cg-card-title">Sustainability via systems</h3>
+            <p class="cg-card-desc">We build tech-enabled workflows that make creator creativity sustainable long-term.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────────────────────────────────── SECTION 6 -->
+    <p class="mk-tag">
+      SECTION 6 · block <b>work-grid</b> · <i>the /brands + /platforms block reused</i> ·
+      <b>READS THE SAME `publishing` CPT</b> as sections 2–4 — enter a property once, it
+      appears in both places · image = <b>hero_image_key</b>, text = <b>excerpt</b>
+    </p>
+
+    <section class="wg">
+      <div class="container-custom">
+        <h2 class="wg-kicker">Platform Impact</h2>
+        <p class="wg-subtitle">
+          A snapshot of the publishing engines we have built and run — shared with NDAs
+          in mind.
+        </p>
+        <ul class="wg-grid">
+          <li class="wg-card">
+            <div class="wg-thumb"><div class="wg-ph" style="background: #0f2d96"></div></div>
+            <h3 class="wg-card-title">Start2Bake</h3>
+            <p class="wg-card-excerpt">An online baking school built and run with India Food Network, from curriculum to checkout.</p>
+          </li>
+          <li class="wg-card">
+            <div class="wg-thumb"><div class="wg-ph" style="background: #4295f8"></div></div>
+            <h3 class="wg-card-title">IFN — India Food Network</h3>
+            <p class="wg-card-excerpt">A leading digital-first food and lifestyle network, published daily across five platforms.</p>
+          </li>
+          <li class="wg-card">
+            <div class="wg-thumb"><div class="wg-ph" style="background: #0f2d96"></div></div>
+            <h3 class="wg-card-title">Kabita’s Kitchen Mix</h3>
+            <p class="wg-card-excerpt">A creator-owned spice range taken from idea to shelf, with recipes and commerce in one place.</p>
+          </li>
+          <li class="wg-card">
+            <div class="wg-thumb"><div class="wg-ph" style="background: #4295f8"></div></div>
+            <h3 class="wg-card-title">Live Commerce Studio</h3>
+            <p class="wg-card-excerpt">A permanent studio setup for shoppable live formats, staffed and scheduled end to end.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────────────────────────────────────────────── SECTION 7 -->
+    <p class="mk-tag">
+      SECTION 7 · block <b>cta-panel</b> · <i>the same block as /brands and /platforms</i>
+    </p>
+
+    <section class="cp">
+      <div class="container-custom">
+        <div class="cp-panel">
+          <h2 class="cp-heading">Building a program that needs scale?</h2>
+          <p class="cp-subtext">Let’s design your creator infrastructure.</p>
+          <div class="cp-actions">
+            <a class="cp-btn" href="/contact">Talk To Us</a>
+            <a class="cp-btn cp-btn--ghost" href="/platforms">Explore Platforms</a>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <script>
+      var btn = document.getElementById('mk-toggle');
+      btn.addEventListener('click', function () {
+        var clean = document.body.classList.toggle('mk-clean');
+        btn.textContent = clean ? 'Show labels' : 'Hide labels';
+      });
+    </script>
+  </body>
+</html>

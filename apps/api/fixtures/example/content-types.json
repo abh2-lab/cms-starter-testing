@@ -1,0 +1,33 @@
+[
+  {
+    "slug": "article",
+    "name": "Article",
+    "description": "News and editorial articles for the example publisher.",
+    "icon": "📰",
+    "previewPath": "/{category}/{slug}",
+    "submissionAccess": "none",
+    "settings": {
+      "taxonomies": {
+        "categories": ["categories"],
+        "tags": ["tags"]
+      }
+    },
+    "fields": [
+      { "name": "subtitle", "label": "Subtitle", "type": "short_text" },
+      { "name": "body", "label": "Body", "type": "rich_text", "required": true },
+      {
+        "name": "summary",
+        "label": "Summary",
+        "type": "long_text",
+        "validations": { "maxLength": 300 }
+      },
+      {
+        "name": "section",
+        "label": "Section",
+        "type": "select",
+        "validations": { "options": ["news", "opinion", "review"] }
+      },
+      { "name": "is_featured", "label": "Featured", "type": "boolean" }
+    ]
+  }
+]
