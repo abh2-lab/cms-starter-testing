@@ -39,7 +39,19 @@ export interface UpdateStatus {
   check: UpdateCheckState;
 }
 
+export interface InstallVersion {
+  version: string;
+  /** package.json could not be read — shown as "dev" rather than a number. */
+  isDevBuild: boolean;
+}
+
 export const updatesApi = {
+  /**
+   * Just the version. Readable by ANY signed-in admin, unlike `get()` below
+   * which is super_admin-only — the sidebar shows this to everyone so a person
+   * reporting a problem can say which version they are on.
+   */
+  version: () => apiFetch<{ data: InstallVersion }>('/admin/updates/version'),
   get: () => apiFetch<{ data: UpdateStatus }>('/admin/updates'),
   /**
    * Queues a check on the worker (202 Accepted) — it does not return the

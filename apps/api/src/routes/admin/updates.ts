@@ -30,6 +30,18 @@ const PatchSchema = z.object({
 });
 
 export const adminUpdatesRoutes: FastifyPluginAsync = async (fastify) => {
+  // The version alone is readable by ANY signed-in admin — it is shown in the
+  // sidebar so anyone reporting a problem can say which version they are on.
+  // Registered in its own scope so the super_admin hook below does not apply.
+  await fastify.register(async (scope) => {
+    scope.addHook('preHandler', requireAdminAuth);
+    scope.get('/version', () => ({
+      data: { version: CMS_VERSION, isDevBuild: isDevVersion(CMS_VERSION) },
+    }));
+  });
+
+  // Everything else — what release is available, forcing a check, toggling it
+  // — is operator business.
   fastify.addHook('preHandler', requireAdminAuth);
   fastify.addHook('preHandler', requireAdminRole('super_admin'));
 

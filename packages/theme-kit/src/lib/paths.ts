@@ -1,5 +1,5 @@
 import { dirname, join, relative, resolve } from 'node:path';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 // Resolve the monorepo root by walking up from this module until we find the
@@ -72,6 +72,37 @@ function resolveActiveTheme(): string {
   }
   return 'default';
 }
+
+/**
+ * EVERY theme layer present in the tree, `default` excluded.
+ *
+ * Verification must not depend on which theme is "active". The check it runs —
+ * does each server block have a Vue renderer — is answered by whichever layer
+ * owns that block, and a layer owns its blocks whether or not it happens to be
+ * selected right now. Keying off ACTIVE_THEME made the answer depend on an env
+ * var, which is absent in CI and absent again inside the Docker build (a
+ * workflow's `env:` does not cross into `docker build`), so the same failure
+ * appeared in three separate places.
+ *
+ * Scanning every layer is also correct for the starter export, which contains
+ * no custom theme at all: there are simply no theme blocks to render.
+ */
+export const ALL_THEME_NAMES: readonly string[] = existsSync(WEB_THEMES_DIR)
+  ? readdirSync(WEB_THEMES_DIR, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && e.name !== 'default')
+      .map((e) => e.name)
+      .sort()
+  : [];
+
+/** Each theme layer's Vue block registry. Missing files are normal. */
+export const ALL_VUE_REGISTRY_FILES: readonly string[] = ALL_THEME_NAMES.map(
+  (name) => resolve(WEB_THEMES_DIR, name, 'app/composables/useBlockRegistry.ts'),
+);
+
+/** Each theme layer's block-component directory. */
+export const ALL_THEME_BLOCKS_DIRS: readonly string[] = ALL_THEME_NAMES.map(
+  (name) => resolve(WEB_THEMES_DIR, name, 'app/components/blocks'),
+);
 
 export const ACTIVE_THEME_NAME = resolveActiveTheme();
 export const THEME_DIR = resolve(WEB_THEMES_DIR, ACTIVE_THEME_NAME);

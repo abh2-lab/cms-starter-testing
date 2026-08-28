@@ -6,7 +6,7 @@ import {
   TEMPLATE_ROLES,
 } from '@cms/blocks';
 import type { TemplateBlock, TemplateMeta } from '@cms/blocks';
-import { VUE_REGISTRY_FILE, CORE_VUE_REGISTRY_FILE } from '../lib/paths.js';
+import { ALL_VUE_REGISTRY_FILES, CORE_VUE_REGISTRY_FILE } from '../lib/paths.js';
 
 // Extract the block_key set from the theme's hand-maintained `BLOCK_REGISTRY`
 // map by parsing the source text. The map can't be imported (it pulls Vue +
@@ -24,7 +24,7 @@ import { VUE_REGISTRY_FILE, CORE_VUE_REGISTRY_FILE } from '../lib/paths.js';
 export function parseVueRegistryKeys(): string[] {
   return [
     ...parseOneRegistry(CORE_VUE_REGISTRY_FILE),
-    ...parseOneRegistry(VUE_REGISTRY_FILE),
+    ...ALL_VUE_REGISTRY_FILES.flatMap(parseOneRegistry),
   ];
 }
 

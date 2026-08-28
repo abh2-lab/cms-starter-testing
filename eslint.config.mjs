@@ -209,16 +209,24 @@ export default tseslint.config(
   },
 
   // Only ONE theme layer is active at a time. `nuxt prepare` generates the
-  // tsconfigs under apps/web/.nuxt/ for the ACTIVE theme (ACTIVE_THEME, default
-  // `decode` -> the `default` layer), so the other layer's files belong to no
-  // TypeScript program and projectService cannot place them — every one of them
-  // failed lint with "was not found by the project service".
+  // tsconfigs under apps/web/.nuxt/ for the ACTIVE theme and the layers it
+  // extends, so every OTHER layer's files belong to no TypeScript program and
+  // projectService cannot place them — they fail with "was not found by the
+  // project service".
+  //
+  // Matches every theme layer EXCEPT `default`, rather than naming them one by
+  // one. `default` is the core layer that the others extend and the fallback
+  // when ACTIVE_THEME is unset, so it is the only one reliably in the program.
+  // Naming layers individually meant CI broke the moment a new custom theme
+  // appeared — themes/ping produced 51 parsing errors this way, having been
+  // fine locally where ACTIVE_THEME=ping put it in the program instead.
   //
   // Structural, not a workaround: an inactive layer is genuinely outside the
-  // build. Lint it without type-aware rules rather than leaving it unlinted.
-  // Typecheck still covers whichever layer is active.
+  // build. Lint it without type-aware rules rather than leave it unlinted;
+  // typecheck still covers whichever layer is active.
   {
-    files: ['apps/web/themes/basic/**/*.{ts,vue}'],
+    files: ['apps/web/themes/*/**/*.{ts,vue}', 'apps/web/themes/*/*.{ts,vue}'],
+    ignores: ['apps/web/themes/default/**'],
     ...tseslint.configs.disableTypeChecked,
   },
 

@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { blockRegistry, BlockMetaSchema, TemplateMetaSchema } from '@cms/blocks';
-import { THEME_BLOCKS_DIR, CORE_THEME_BLOCKS_DIR, VUE_REGISTRY_FILE, relativeToRepo } from '../lib/paths.js';
+import { ALL_THEME_BLOCKS_DIRS, CORE_THEME_BLOCKS_DIR, VUE_REGISTRY_FILE, relativeToRepo } from '../lib/paths.js';
 import { toBlockComponentName } from '../lib/naming.js';
 import { makeStubContext, defaultsFrom } from './stub-ctx.js';
 import { allParts, allTemplates, collectBlockKeys, parseVueRegistryKeys } from './sources.js';
@@ -72,12 +72,16 @@ function checkCoherence(): Finding[] {
         fix: `add it to useBlockRegistry.ts, or re-run \`pnpm gen:block --key ${key} ...\``,
       });
     }
-    // The render half lives in core for a core block and in the theme layer
-    // for a theme block; either satisfies the pairing.
+    // The render half lives in core for a core block, and in whichever theme
+    // layer owns it for a theme block. Any layer satisfies the pairing —
+    // checking only the "active" one made this depend on an env var that is
+    // absent in CI and inside the Docker build.
     const vueName = `${toBlockComponentName(key)}.vue`;
-    const vuePath = join(THEME_BLOCKS_DIR, vueName);
-    const coreVuePath = join(CORE_THEME_BLOCKS_DIR, vueName);
-    if (!existsSync(vuePath) && !existsSync(coreVuePath)) {
+    const vuePath = join(CORE_THEME_BLOCKS_DIR, vueName);
+    const found =
+      existsSync(vuePath) ||
+      ALL_THEME_BLOCKS_DIRS.some((dir) => existsSync(join(dir, vueName)));
+    if (!found) {
       findings.push({
         key,
         file: relativeToRepo(vuePath),

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import {
   RouterLink,
   RouterView,
@@ -12,6 +12,7 @@ import { useTheme } from '@/composables/useTheme';
 import { useHelp } from '@/composables/useHelp';
 import Icon from '@/components/Icon.vue';
 import UpdateBanner from '@/components/UpdateBanner.vue';
+import { updatesApi } from '@/api/updates';
 
 const router = useRouter();
 const route = useRoute();
@@ -20,6 +21,20 @@ const { theme, toggleTheme } = useTheme();
 const help = useHelp();
 
 const BRAND = 'CMS Admin';
+
+// Which version this install runs, shown at the bottom of the sidebar. Any
+// signed-in admin can read it (the rest of /admin/updates is super_admin-only),
+// so anyone reporting a problem can say what they are on. Silent on failure —
+// a missing version line is not worth an error in front of an editor.
+const installVersion = ref<string | null>(null);
+onMounted(async () => {
+  try {
+    const res = await updatesApi.version();
+    installVersion.value = res.data.isDevBuild ? 'dev' : `v${res.data.version}`;
+  } catch {
+    installVersion.value = null;
+  }
+});
 
 async function onLogout(): Promise<void> {
   await auth.logout();
@@ -484,6 +499,9 @@ function onSearch(): void {
             </svg>
           </button>
         </div>
+        <p v-if="installVersion" class="install-version" :title="`CMS ${installVersion}`">
+          {{ installVersion }}
+        </p>
       </div>
     </aside>
 
@@ -734,6 +752,15 @@ function onSearch(): void {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.install-version {
+  margin: 6px 0 0;
+  padding: 0 8px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--sb-section);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 .user-role {
   color: var(--sb-text);
