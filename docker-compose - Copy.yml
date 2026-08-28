@@ -212,7 +212,9 @@ services:
   # The api and worker services gate on this completing successfully so they
   # never come up against an unmigrated schema.
   db-migrate:
-    image: ${CMS_IMAGE_REGISTRY:-ghcr.io/abh2-lab}/cms-api:${CMS_IMAGE_TAG:?CMS_IMAGE_TAG must be set (the CMS version to run, e.g. 1.4.4)}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
     labels:
       - "coolify.managed=true"
       - "traefik.enable=false"
@@ -246,7 +248,9 @@ services:
   # here env comes from compose). Not gated on by api/web, so the site boots
   # even if search indexing is slow or briefly fails.
   meili-reindex:
-    image: ${CMS_IMAGE_REGISTRY:-ghcr.io/abh2-lab}/cms-api:${CMS_IMAGE_TAG:?CMS_IMAGE_TAG must be set (the CMS version to run, e.g. 1.4.4)}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
     labels:
       - "coolify.managed=true"
       - "traefik.enable=false"
@@ -290,7 +294,9 @@ services:
   # Coolify and it wires up the proxy to the container's EXPOSEd port. Locally,
   # docker-compose.override.yml publishes them to localhost.
   api:
-    image: ${CMS_IMAGE_REGISTRY:-ghcr.io/abh2-lab}/cms-api:${CMS_IMAGE_TAG:?CMS_IMAGE_TAG must be set (the CMS version to run, e.g. 1.4.4)}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
     environment:
       NODE_ENV: production
       LOG_LEVEL: info
@@ -360,7 +366,9 @@ services:
       start_period: 20s
 
   worker:
-    image: ${CMS_IMAGE_REGISTRY:-ghcr.io/abh2-lab}/cms-worker:${CMS_IMAGE_TAG:?CMS_IMAGE_TAG must be set (the CMS version to run, e.g. 1.4.4)}
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
     # Internal background processor — never publicly routed. The labels tell
     # Coolify to skip the proxy/domain UI (no pointless public worker domain).
     labels:
@@ -432,7 +440,9 @@ services:
   # so the SPA hits the same origin in the browser — session cookie's Path=/
   # and SameSite=Lax keep working without CORS, matching the Vite dev proxy.
   admin:
-    image: ${CMS_IMAGE_REGISTRY:-ghcr.io/abh2-lab}/cms-admin:${CMS_IMAGE_TAG:?CMS_IMAGE_TAG must be set (the CMS version to run, e.g. 1.4.4)}
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
     depends_on:
       api:
         condition: service_healthy
@@ -449,7 +459,9 @@ services:
   # build time — see apps/web/Dockerfile). No API URL or CORS env is needed here
   # for either SSR or browser requests.
   web:
-    image: ${CMS_IMAGE_REGISTRY:-ghcr.io/abh2-lab}/cms-web:${CMS_IMAGE_TAG:?CMS_IMAGE_TAG must be set (the CMS version to run, e.g. 1.4.4)}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
     environment:
       NODE_ENV: production
       NITRO_PORT: "3001"
